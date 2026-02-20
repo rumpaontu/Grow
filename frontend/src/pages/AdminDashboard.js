@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { LogOut, Users, FileCheck, ListTodo, Image, DollarSign, MessageSquare, CheckCircle, XCircle } from 'lucide-react';
+import { LogOut, Users, FileCheck, ListTodo, Image, DollarSign, MessageSquare, CheckCircle, XCircle, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
