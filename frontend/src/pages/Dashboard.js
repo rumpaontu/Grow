@@ -244,15 +244,15 @@ export default function Dashboard() {
       setNotifications(newNotifications);
       setUnreadCount(unreadCountRes.data.unread_count);
       
-      // Play sound only for new notifications that haven't been played yet
-      const newNotificationIds = newNotifications
-        .filter(n => !n.read_by || !n.read_by.includes(user?.id))
+      // Play sound only for NEW unread notifications that haven't been played yet
+      const unreadNotificationIds = newNotifications
+        .filter(n => n.is_unread)
         .map(n => n.id)
         .filter(id => !playedNotifications.has(id));
       
-      if (newNotificationIds.length > 0) {
+      if (unreadNotificationIds.length > 0) {
         notificationSound.play().catch(e => console.log('Audio play failed:', e));
-        setPlayedNotifications(prev => new Set([...prev, ...newNotificationIds]));
+        setPlayedNotifications(prev => new Set([...prev, ...unreadNotificationIds]));
       }
     } catch (error) {
       console.error('Failed to fetch notifications');
@@ -267,6 +267,20 @@ export default function Dashboard() {
         { notification_id: notificationId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      
+      // Immediately update local state to reflect the read status
+      setNotifications(prev => 
+        prev.map(n => 
+          n.id === notificationId 
+            ? { ...n, is_unread: false, read_by: [...(n.read_by || []), user?.id] }
+            : n
+        )
+      );
+      
+      // Update unread count
+      setUnreadCount(prev => Math.max(0, prev - 1));
+      
+      // Fetch fresh data from server
       fetchNotifications();
     } catch (error) {
       console.error('Failed to mark notification as read');
