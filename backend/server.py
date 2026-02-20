@@ -94,6 +94,14 @@ class WithdrawalAction(BaseModel):
 class MinWithdrawalUpdate(BaseModel):
     min_withdrawal_amount: float
 
+class NotificationCreate(BaseModel):
+    title: str
+    message: str
+    user_id: Optional[str] = None
+
+class NotificationRead(BaseModel):
+    notification_id: str
+
 def create_token(user_id: str, email: str, role: str) -> str:
     payload = {
         'user_id': user_id,
