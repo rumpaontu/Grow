@@ -783,6 +783,113 @@ async def update_binance_address(data: BinanceAddressUpdate, payload: dict = Dep
     
     return {'message': 'Binance address updated successfully'}
 
+@api_router.post('/admin/settings/min-withdrawal')
+async def update_min_withdrawal(data: MinWithdrawalUpdate, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    if data.min_withdrawal_amount < 0:
+        raise HTTPException(status_code=400, detail='Minimum withdrawal amount must be positive')
+    
+    await db.settings.update_one(
+        {'key': 'min_withdrawal_amount'},
+        {'$set': {'value': data.min_withdrawal_amount}},
+        upsert=True
+    )
+    
+    return {'message': 'Minimum withdrawal amount updated successfully'}
+
+@api_router.get('/admin/withdrawals/pending')
+async def get_pending_withdrawals(payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    withdrawals = await db.withdrawals.find(
+        {'status': 'pending'},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    
+    for withdrawal in withdrawals:
+        user = await db.users.find_one({'id': withdrawal['user_id']}, {'_id': 0})
+        if user:
+            withdrawal['user_name'] = user.get('full_name')
+            withdrawal['user_email'] = user.get('email')
+    
+    return {'withdrawals': withdrawals}
+
+@api_router.get('/admin/withdrawals/all')
+async def get_all_withdrawals(payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    withdrawals = await db.withdrawals.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    
+    for withdrawal in withdrawals:
+        user = await db.users.find_one({'id': withdrawal['user_id']}, {'_id': 0})
+        if user:
+            withdrawal['user_name'] = user.get('full_name')
+            withdrawal['user_email'] = user.get('email')
+    
+    return {'withdrawals': withdrawals}
+
+@api_router.post('/admin/withdrawals/action')
+async def withdrawal_action(data: WithdrawalAction, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    if data.action not in ['approve', 'reject']:
+        raise HTTPException(status_code=400, detail='Invalid action')
+    
+    withdrawal = await db.withdrawals.find_one({'id': data.withdrawal_id}, {'_id': 0})
+    if not withdrawal:
+        raise HTTPException(status_code=404, detail='Withdrawal not found')
+    
+    if withdrawal['status'] != 'pending':
+        raise HTTPException(status_code=400, detail='Withdrawal already processed')
+    
+    if data.action == 'approve':
+        user = await db.users.find_one({'id': withdrawal['user_id']}, {'_id': 0})
+        if not user:
+            raise HTTPException(status_code=404, detail='User not found')
+        
+        if user['balance'] < withdrawal['amount']:
+            raise HTTPException(status_code=400, detail='User has insufficient balance')
+        
+        await db.users.update_one(
+            {'id': withdrawal['user_id']},
+            {'$inc': {'balance': -withdrawal['amount']}}
+        )
+        
+        await db.withdrawals.update_one(
+            {'id': data.withdrawal_id},
+            {'$set': {
+                'status': 'approved',
+                'processed_at': datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        await db.transactions.insert_one({
+            'id': str(uuid.uuid4()),
+            'user_id': withdrawal['user_id'],
+            'type': 'withdrawal',
+            'amount': -withdrawal['amount'],
+            'status': 'completed',
+            'created_at': datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {'message': 'Withdrawal approved and processed successfully'}
+    
+    else:
+        await db.withdrawals.update_one(
+            {'id': data.withdrawal_id},
+            {'$set': {
+                'status': 'rejected',
+                'processed_at': datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {'message': 'Withdrawal rejected'}
+
 @api_router.get('/admin/inquiries')
 async def get_sponsor_inquiries(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
