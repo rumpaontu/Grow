@@ -997,6 +997,16 @@ async def withdrawal_action(data: WithdrawalAction, payload: dict = Depends(veri
             'created_at': datetime.now(timezone.utc).isoformat()
         })
         
+        await db.notifications.insert_one({
+            'id': str(uuid.uuid4()),
+            'title': 'Withdrawal Approved!',
+            'message': f'Your withdrawal request of ${withdrawal["amount"]:.2f} has been approved and processed. Funds will be sent to your Binance address shortly.',
+            'user_id': withdrawal['user_id'],
+            'is_read': False,
+            'read_by': [],
+            'created_at': datetime.now(timezone.utc).isoformat()
+        })
+        
         return {'message': 'Withdrawal approved and processed successfully'}
     
     else:
@@ -1007,6 +1017,16 @@ async def withdrawal_action(data: WithdrawalAction, payload: dict = Depends(veri
                 'processed_at': datetime.now(timezone.utc).isoformat()
             }}
         )
+        
+        await db.notifications.insert_one({
+            'id': str(uuid.uuid4()),
+            'title': 'Withdrawal Rejected',
+            'message': f'Your withdrawal request of ${withdrawal["amount"]:.2f} has been rejected. Please contact support for more information.',
+            'user_id': withdrawal['user_id'],
+            'is_read': False,
+            'read_by': [],
+            'created_at': datetime.now(timezone.utc).isoformat()
+        })
         
         return {'message': 'Withdrawal rejected'}
 
