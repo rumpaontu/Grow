@@ -603,6 +603,66 @@ async def get_binance_address():
         return {'binance_address': settings.get('value')}
     return {'binance_address': 'TBD'}
 
+@api_router.get('/settings/min-withdrawal')
+async def get_min_withdrawal():
+    settings = await db.settings.find_one({'key': 'min_withdrawal_amount'}, {'_id': 0})
+    if settings:
+        return {'min_withdrawal_amount': settings.get('value', 5)}
+    return {'min_withdrawal_amount': 5}
+
+@api_router.post('/withdrawals/request')
+async def request_withdrawal(data: WithdrawalRequest, payload: dict = Depends(verify_token)):
+    if payload['role'] == 'admin':
+        raise HTTPException(status_code=403, detail='Admin cannot request withdrawal')
+    
+    user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    if user['kyc_status'] != 'approved':
+        raise HTTPException(status_code=403, detail='KYC must be approved before withdrawal')
+    
+    min_withdrawal_settings = await db.settings.find_one({'key': 'min_withdrawal_amount'}, {'_id': 0})
+    min_withdrawal = min_withdrawal_settings.get('value', 5) if min_withdrawal_settings else 5
+    
+    if data.amount < min_withdrawal:
+        raise HTTPException(status_code=400, detail=f'Minimum withdrawal amount is ${min_withdrawal}')
+    
+    if user['balance'] < data.amount:
+        raise HTTPException(status_code=400, detail='Insufficient balance')
+    
+    pending_withdrawals = await db.withdrawals.find({
+        'user_id': payload['user_id'],
+        'status': 'pending'
+    }).to_list(None)
+    
+    if pending_withdrawals:
+        raise HTTPException(status_code=400, detail='You have a pending withdrawal request. Please wait for approval.')
+    
+    withdrawal_doc = {
+        'id': str(uuid.uuid4()),
+        'user_id': payload['user_id'],
+        'amount': data.amount,
+        'binance_address': data.binance_address,
+        'status': 'pending',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.withdrawals.insert_one(withdrawal_doc)
+    
+    return {
+        'message': 'Withdrawal request submitted successfully. Awaiting admin approval.',
+        'withdrawal_id': withdrawal_doc['id']
+    }
+
+@api_router.get('/withdrawals/mine')
+async def get_my_withdrawals(payload: dict = Depends(verify_token)):
+    withdrawals = await db.withdrawals.find(
+        {'user_id': payload['user_id']},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    return {'withdrawals': withdrawals}
+
 @api_router.get('/admin/users')
 async def get_all_users(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
