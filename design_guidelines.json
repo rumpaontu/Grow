@@ -1,0 +1,159 @@
+{
+  "project_name": "GrowVault",
+  "design_philosophy": {
+    "identity": "E1 - The Anti-AI Designer",
+    "core_principles": [
+      "Fusion over Imitation: Luxury Corporate Finance meets Glassmorphism",
+      "Emotion First: Trust, Wealth, Authority",
+      "Content is King: Directed storytelling with data visualization",
+      "Zoom In: Bold focus on metrics and financial growth",
+      "Negative Space: Generous breathing room (2-3x standard)",
+      "Contrast: High contrast Gold vs Deep Obsidian"
+    ],
+    "anti_patterns": [
+      "No Purple/Teal for CTAs",
+      "No Inter everywhere (Montserrat for headings)",
+      "No Center-Everything Disease (Asymmetry creates tension)",
+      "No Gradient Overload (>20% is decoration)"
+    ]
+  },
+  "typography": {
+    "font_family": {
+      "headings": "Montserrat, sans-serif",
+      "body": "Manrope, sans-serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-5xl md:text-7xl font-bold tracking-tight leading-none",
+      "h2": "text-4xl md:text-6xl font-semibold tracking-tight",
+      "h3": "text-3xl md:text-4xl font-medium",
+      "body_lg": "text-lg md:text-xl leading-relaxed",
+      "body": "text-base leading-relaxed text-muted-foreground",
+      "caption": "text-sm uppercase tracking-widest text-muted-foreground"
+    },
+    "rules": [
+      "Headings MUST use Montserrat.",
+      "Body text uses Manrope for readability.",
+      "Numbers and financial data use JetBrains Mono or Manrope tabular-nums.",
+      "Letter spacing: Tight for headings (-0.02em), Wide for captions (0.1em)."
+    ]
+  },
+  "colors": {
+    "theme": "dark",
+    "palette": {
+      "background": "#0A0A0A",
+      "foreground": "#EDEDED",
+      "primary": "#D4AF37",
+      "primary_foreground": "#000000",
+      "secondary": "#1A1A1A",
+      "secondary_foreground": "#D4AF37",
+      "accent": "#C5A059",
+      "accent_foreground": "#000000",
+      "muted": "#1F1F1F",
+      "muted_foreground": "#A1A1AA",
+      "border": "#27272A",
+      "glass_border": "rgba(255, 255, 255, 0.08)",
+      "glass_bg": "rgba(20, 20, 20, 0.6)",
+      "success": "#10B981",
+      "error": "#EF4444",
+      "warning": "#F59E0B"
+    },
+    "gradients": {
+      "gold_rush": "linear-gradient(135deg, #D4AF37 0%, #C5A059 100%)",
+      "obsidian_sheen": "linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%)",
+      "glass_shine": "linear-gradient(120deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 100%)"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": {
+      "default": "backdrop-blur-xl bg-black/40 border border-white/10 shadow-2xl",
+      "heavy": "backdrop-blur-2xl bg-black/60 border border-white/5",
+      "hover": "hover:bg-white/5 transition-all duration-300"
+    },
+    "shadows": {
+      "glow": "0 0 20px rgba(212, 175, 55, 0.15)",
+      "deep": "0 20px 40px -10px rgba(0, 0, 0, 0.5)"
+    },
+    "borders": {
+      "subtle": "1px solid rgba(255, 255, 255, 0.08)",
+      "highlight": "1px solid rgba(212, 175, 55, 0.3)"
+    },
+    "radius": {
+      "default": "rounded-none",
+      "card": "rounded-xl"
+    }
+  },
+  "layout_strategy": {
+    "spacing": {
+      "section_gap": "gap-24 md:gap-32",
+      "container_padding": "p-6 md:p-12",
+      "internal_padding": "p-6"
+    },
+    "grids": {
+      "landing": "grid-cols-1 md:grid-cols-12 gap-8",
+      "dashboard": "grid-cols-1 md:grid-cols-4 gap-6",
+      "bento": "grid auto-rows-[minmax(180px,auto)] grid-cols-1 md:grid-cols-3 gap-4"
+    },
+    "containers": {
+      "max_width": "max-w-7xl mx-auto"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-none hover:bg-accent transition-colors shadow-[0_0_15px_rgba(212,175,55,0.3)]",
+      "secondary": "bg-transparent border border-primary/30 text-primary hover:bg-primary/10 px-8 py-4 rounded-none transition-colors",
+      "glass": "bg-white/5 border border-white/10 text-white hover:bg-white/10 backdrop-blur-md px-6 py-3 rounded-none"
+    },
+    "cards": {
+      "feature": "bg-black/40 backdrop-blur-md border border-white/10 p-8 hover:border-primary/30 transition-all group",
+      "stat": "bg-gradient-to-br from-white/5 to-transparent border border-white/5 p-6"
+    },
+    "inputs": {
+      "default": "bg-black/50 border-white/10 focus:border-primary/50 text-white placeholder:text-white/20 h-12 rounded-none"
+    }
+  },
+  "image_urls": {
+    "hero_background": "https://images.pexels.com/photos/15854584/pexels-photo-15854584.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "corporate_team": "https://images.pexels.com/photos/6950015/pexels-photo-6950015.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "handshake_trust": "https://images.pexels.com/photos/7446588/pexels-photo-7446588.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "crypto_wealth": "https://images.pexels.com/photos/7584354/pexels-photo-7584354.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"
+  },
+  "icons_library": {
+    "primary": "lucide-react",
+    "alternatives": ["@radix-ui/react-icons"]
+  },
+  "motion": {
+    "entrance": {
+      "initial": { "opacity": 0, "y": 20 },
+      "animate": { "opacity": 1, "y": 0 },
+      "transition": { "duration": 0.6, "ease": [0.22, 1, 0.36, 1] }
+    },
+    "hover": {
+      "scale": 1.02,
+      "transition": { "duration": 0.2 }
+    }
+  },
+  "instructions_to_main_agent": [
+    "IMPLEMENT DARK MODE ONLY. Force class='dark' on html/body.",
+    "Use 'Montserrat' for all Headings (h1-h6). Import from Google Fonts.",
+    "Use 'Manrope' for all Body text. Import from Google Fonts.",
+    "Implement Glassmorphism for all cards and dashboards: bg-black/40 backdrop-blur-xl border-white/10.",
+    "Primary Color is GOLD (#D4AF37). Use it for CTAs and accents.",
+    "Background is Deep Obsidian (#0A0A0A). Never use pure black #000000.",
+    "Dashboard Layout: Use a dense Grid. Sidebar + Topbar + Content Area.",
+    "Landing Page: Use large typography, gold accents, and the provided abstract gold background image.",
+    "Animations: Use Framer Motion for smooth entrances. Stagger children.",
+    "Charts: Use Recharts with customized tooltips (dark glass style).",
+    "Referral Tree: Use a custom recursive component or a library like 'react-d3-tree' if needed, styled with gold connections.",
+    "YouTube Task: Implement a custom timer component (30s) that unlocks the 'Claim' button."
+  ],
+  "UNIVERSAL_GUIDELINES": [
+    "Do not use generic centered layouts. Use asymmetry.",
+    "Use 2-3x more spacing than typical.",
+    "Micro-animations on every interaction.",
+    "No gradients > 20% opacity.",
+    "Use 'sonner' for toasts.",
+    "Export components as named exports.",
+    "Pages as default exports."
+  ]
+}
