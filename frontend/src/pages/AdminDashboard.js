@@ -25,6 +25,9 @@ export default function AdminDashboard() {
   const [bannerFile, setBannerFile] = useState(null);
   const [selectedKYC, setSelectedKYC] = useState(null);
   const [showKYCDialog, setShowKYCDialog] = useState(false);
+  const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
+  const [allWithdrawals, setAllWithdrawals] = useState([]);
+  const [minWithdrawal, setMinWithdrawal] = useState(5);
 
   useEffect(() => {
     fetchAdminData();
