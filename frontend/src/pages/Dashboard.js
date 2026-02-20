@@ -101,12 +101,18 @@ export default function Dashboard() {
   const completeTask = async (taskId) => {
     const token = localStorage.getItem('token');
     try {
-      await axios.post(
+      const response = await axios.post(
         `${API}/tasks/complete`,
         { task_id: taskId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success('Task completed! Daily income will be processed.');
+      
+      if (response.data.daily_income_added > 0) {
+        toast.success(`Task completed! +$${response.data.daily_income_added.toFixed(2)} added to your balance!`);
+      } else {
+        toast.success('Task completed!');
+      }
+      
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to complete task');
