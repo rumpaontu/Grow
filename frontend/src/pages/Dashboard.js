@@ -1,0 +1,502 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import axios from 'axios';
+import { toast } from 'sonner';
+import { LogOut, Package, TrendingUp, Users, DollarSign, Clock, Play, CheckCircle, Copy } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [packages, setPackages] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [referralStats, setReferralStats] = useState({ level1_count: 0, level2_count: 0 });
+  const [referralTree, setReferralTree] = useState({ level1: [], level2: [] });
+  const [banner, setBanner] = useState(null);
+  const [binanceAddress, setBinanceAddress] = useState('');
+  const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
+  const [purchaseAmount, setPurchaseAmount] = useState(25);
+  const [transactionId, setTransactionId] = useState('');
+  const [screenshot, setScreenshot] = useState(null);
+  const [activeTimer, setActiveTimer] = useState(null);
+  const [timerSeconds, setTimerSeconds] = useState({});
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const [userRes, packagesRes, tasksRes, refStatsRes, refTreeRes, bannerRes, binanceRes] = await Promise.all([
+        axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/packages/mine`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/tasks/daily`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/referrals/stats`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/referrals/tree`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/settings/banner`),
+        axios.get(`${API}/settings/binance`)
+      ]);
+
+      setUser(userRes.data);
+      setPackages(packagesRes.data.packages);
+      setTasks(tasksRes.data.tasks);
+      setReferralStats(refStatsRes.data);
+      setReferralTree(refTreeRes.data);
+      setBanner(bannerRes.data.banner_url);
+      setBinanceAddress(binanceRes.data.binance_address);
+
+      if (userRes.data.kyc_status === 'under_review') {
+        toast.info('Your KYC is under review. Some features are limited.');
+      } else if (userRes.data.kyc_status === 'rejected') {
+        toast.error('Your KYC was rejected. Please resubmit.');
+        navigate('/kyc');
+      } else if (userRes.data.kyc_status === 'pending') {
+        navigate('/kyc');
+      }
+    } catch (error) {
+      toast.error('Failed to load dashboard data');
+      if (error.response?.status === 401) {
+        localStorage.clear();
+        navigate('/login');
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/login');
+    toast.success('Logged out successfully');
+  };
+
+  const startTimer = (taskId) => {
+    setActiveTimer(taskId);
+    setTimerSeconds({ ...timerSeconds, [taskId]: 30 });
+
+    const interval = setInterval(() => {
+      setTimerSeconds((prev) => {
+        const newSeconds = (prev[taskId] || 30) - 1;
+        if (newSeconds <= 0) {
+          clearInterval(interval);
+          return { ...prev, [taskId]: 0 };
+        }
+        return { ...prev, [taskId]: newSeconds };
+      });
+    }, 1000);
+  };
+
+  const completeTask = async (taskId) => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        `${API}/tasks/complete`,
+        { task_id: taskId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Task completed! Daily income will be processed.');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to complete task');
+    }
+  };
+
+  const handlePurchaseSubmit = async () => {
+    if (!transactionId || !screenshot) {
+      toast.error('Please provide transaction ID and screenshot');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        `${API}/packages/purchase`,
+        {
+          amount: purchaseAmount,
+          transaction_id: transactionId,
+          screenshot_base64: screenshot
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Package purchase submitted! Awaiting admin approval.');
+      setShowPurchaseDialog(false);
+      setTransactionId('');
+      setScreenshot(null);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to submit purchase');
+    }
+  };
+
+  const handleScreenshotUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setScreenshot(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const copyReferralLink = () => {
+    const link = `${window.location.origin}/signup?ref=${user.referral_code}`;
+    navigator.clipboard.writeText(link);
+    toast.success('Referral link copied!');
+  };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-dark-obsidian flex items-center justify-center">
+        <div className="text-gold text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-dark-obsidian">
+      {/* Header */}
+      <header className="glass-effect sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gold font-montserrat">GrowVault</h1>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Welcome back,</p>
+              <p className="text-white font-semibold">{user.full_name}</p>
+            </div>
+            <Button
+              data-testid="logout-btn"
+              onClick={handleLogout}
+              variant="outline"
+              className="border-gold/30 text-gold hover:bg-gold/10"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Banner Ad */}
+      {banner && (
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <img
+            src={banner}
+            alt="Sponsor Banner"
+            className="w-full h-48 object-cover glass-effect"
+          />
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-effect p-6"
+            data-testid="balance-card"
+          >
+            <DollarSign className="w-8 h-8 text-gold mb-2" />
+            <p className="text-sm text-muted-foreground">Balance</p>
+            <h3 className="text-3xl font-bold text-white font-montserrat">${user.balance?.toFixed(2) || '0.00'}</h3>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="glass-effect p-6"
+          >
+            <Package className="w-8 h-8 text-gold mb-2" />
+            <p className="text-sm text-muted-foreground">Active Packages</p>
+            <h3 className="text-3xl font-bold text-white font-montserrat">{packages.filter(p => p.is_active).length}</h3>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass-effect p-6"
+          >
+            <Users className="w-8 h-8 text-gold mb-2" />
+            <p className="text-sm text-muted-foreground">Level 1 Referrals</p>
+            <h3 className="text-3xl font-bold text-white font-montserrat">{referralStats.level1_count}</h3>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="glass-effect p-6"
+          >
+            <Users className="w-8 h-8 text-gold mb-2" />
+            <p className="text-sm text-muted-foreground">Level 2 Referrals</p>
+            <h3 className="text-3xl font-bold text-white font-montserrat">{referralStats.level2_count}</h3>
+          </motion.div>
+        </div>
+
+        {/* Referral Link */}
+        <div className="glass-effect p-6">
+          <h2 className="text-xl font-bold text-gold mb-4 font-montserrat">Your Referral Link</h2>
+          <div className="flex gap-2">
+            <Input
+              value={`${window.location.origin}/signup?ref=${user.referral_code}`}
+              readOnly
+              className="bg-black/50 border-white/10 text-white"
+            />
+            <Button
+              data-testid="copy-referral-link-btn"
+              onClick={copyReferralLink}
+              className="bg-gold text-black hover:bg-accent"
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Daily Tasks */}
+        <div className="glass-effect p-6">
+          <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">Daily Tasks</h2>
+          <div className="space-y-4">
+            {tasks.map((task) => (
+              <div key={task.id} className="bg-black/40 border border-white/10 p-6 hover:border-gold/30 transition-all" data-testid={`task-${task.id}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-white mb-2">{task.title}</h3>
+                    <a
+                      href={task.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gold hover:text-accent text-sm"
+                    >
+                      {task.url}
+                    </a>
+                  </div>
+                  <div>
+                    {task.completed ? (
+                      <div className="flex items-center gap-2 text-green-500">
+                        <CheckCircle className="w-5 h-5" />
+                        <span>Completed</span>
+                      </div>
+                    ) : activeTimer === task.id ? (
+                      <div className="text-center">
+                        <p className="text-gold font-bold text-2xl mb-2">{timerSeconds[task.id] || 0}s</p>
+                        {timerSeconds[task.id] === 0 ? (
+                          <Button
+                            data-testid={`complete-task-${task.id}-btn`}
+                            onClick={() => completeTask(task.id)}
+                            className="bg-gold text-black hover:bg-accent"
+                          >
+                            Claim
+                          </Button>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">Wait...</p>
+                        )}
+                      </div>
+                    ) : (
+                      <Button
+                        data-testid={`start-task-${task.id}-btn`}
+                        onClick={() => startTimer(task.id)}
+                        className="bg-gold text-black hover:bg-accent"
+                      >
+                        <Play className="w-4 h-4 mr-2" />
+                        Start
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {tasks.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">No tasks available</p>
+            )}
+          </div>
+        </div>
+
+        {/* Active Packages */}
+        <div className="glass-effect p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gold font-montserrat">My Packages</h2>
+            <Dialog open={showPurchaseDialog} onOpenChange={setShowPurchaseDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  data-testid="purchase-package-btn"
+                  className="bg-gold text-black hover:bg-accent"
+                  disabled={user.kyc_status !== 'approved'}
+                >
+                  <Package className="w-4 h-4 mr-2" />
+                  Purchase Package
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-[#1A1A1A] border-white/10">
+                <DialogHeader>
+                  <DialogTitle className="text-gold font-montserrat text-2xl">Purchase Package</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6 mt-4">
+                  <div>
+                    <Label className="text-white mb-4 block">Select Package</Label>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        data-testid="select-package-25-btn"
+                        onClick={() => setPurchaseAmount(25)}
+                        className={`p-4 border-2 transition-all ${
+                          purchaseAmount === 25
+                            ? 'border-gold bg-gold/10'
+                            : 'border-white/10 hover:border-gold/30'
+                        }`}
+                      >
+                        <p className="text-gold font-bold text-2xl">$25</p>
+                        <p className="text-sm text-muted-foreground">$1/day for 60 days</p>
+                      </button>
+                      <button
+                        data-testid="select-package-60-btn"
+                        onClick={() => setPurchaseAmount(60)}
+                        className={`p-4 border-2 transition-all ${
+                          purchaseAmount === 60
+                            ? 'border-gold bg-gold/10'
+                            : 'border-white/10 hover:border-gold/30'
+                        }`}
+                      >
+                        <p className="text-gold font-bold text-2xl">$60</p>
+                        <p className="text-sm text-muted-foreground">$2.5/day for 60 days</p>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-white">Binance TRC20 Address</Label>
+                    <Input
+                      value={binanceAddress}
+                      readOnly
+                      className="bg-black/50 border-white/10 text-gold mt-2"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="transaction_id" className="text-white">Transaction ID</Label>
+                    <Input
+                      id="transaction_id"
+                      data-testid="transaction-id-input"
+                      value={transactionId}
+                      onChange={(e) => setTransactionId(e.target.value)}
+                      className="bg-black/50 border-white/10 text-white mt-2"
+                      placeholder="Enter transaction ID"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-white">Payment Screenshot</Label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleScreenshotUpload}
+                      className="w-full mt-2 text-white"
+                    />
+                  </div>
+
+                  <Button
+                    data-testid="submit-purchase-btn"
+                    onClick={handlePurchaseSubmit}
+                    className="w-full bg-gold text-black hover:bg-accent py-6"
+                  >
+                    Submit Purchase Request
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {packages.map((pkg) => (
+              <div key={pkg.id} className="bg-black/40 border border-white/10 p-6" data-testid={`package-${pkg.id}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-gold">${pkg.amount} Package</h3>
+                  <span className={`px-3 py-1 text-xs font-semibold ${
+                    pkg.is_active ? 'bg-green-500/20 text-green-500' : 'bg-gray-500/20 text-gray-500'
+                  }`}>
+                    {pkg.is_active ? 'Active' : 'Completed'}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Daily Income:</span>
+                    <span className="text-white font-semibold">${pkg.daily_income}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Days Remaining:</span>
+                    <span className="text-white font-semibold">{pkg.days_remaining}/60</span>
+                  </div>
+                  <Progress value={(60 - pkg.days_remaining) / 60 * 100} className="h-2" />
+                </div>
+              </div>
+            ))}
+            {packages.length === 0 && (
+              <p className="text-center text-muted-foreground py-8 col-span-2">No packages purchased yet</p>
+            )}
+          </div>
+        </div>
+
+        {/* Referral Tree */}
+        <div className="glass-effect p-6">
+          <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">Referral Network</h2>
+          
+          {/* Level 1 */}
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-white mb-4">Level 1 (Direct Referrals)</h3>
+            <div className="space-y-3">
+              {referralTree.level1.map((ref) => (
+                <div key={ref.id} className="bg-black/40 border border-white/10 p-4 flex items-center justify-between" data-testid={`level1-ref-${ref.id}`}>
+                  <div>
+                    <p className="text-white font-semibold">{ref.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{ref.email}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gold font-semibold">${ref.balance?.toFixed(2) || '0.00'}</p>
+                    <p className="text-xs text-muted-foreground">Balance</p>
+                  </div>
+                </div>
+              ))}
+              {referralTree.level1.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">No Level 1 referrals yet</p>
+              )}
+            </div>
+          </div>
+
+          {/* Level 2 */}
+          <div>
+            <h3 className="text-xl font-semibold text-white mb-4">Level 2 (Indirect Referrals)</h3>
+            <div className="space-y-3">
+              {referralTree.level2.map((ref) => (
+                <div key={ref.id} className="bg-black/40 border border-white/10 p-4 flex items-center justify-between" data-testid={`level2-ref-${ref.id}`}>
+                  <div>
+                    <p className="text-white font-semibold">{ref.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{ref.email}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-gold font-semibold">${ref.balance?.toFixed(2) || '0.00'}</p>
+                    <p className="text-xs text-muted-foreground">Balance</p>
+                  </div>
+                </div>
+              ))}
+              {referralTree.level2.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">No Level 2 referrals yet</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
