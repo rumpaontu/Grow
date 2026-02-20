@@ -1,72 +1,785 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File, Form
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from typing import List, Optional, Dict, Any
 import uuid
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
+import bcrypt
+import jwt
+import base64
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import asyncio
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
 app = FastAPI()
-
-# Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+security = HTTPBearer()
 
+JWT_SECRET = os.environ.get('JWT_SECRET', 'growvault_secret_key_2024')
+JWT_ALGORITHM = 'HS256'
+ADMIN_EMAIL = 'moneypower15@gmail.com'
+ADMIN_PASSWORD = 'Adminpowerssa15'
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+class UserSignup(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: str
+    referral_code: Optional[str] = None
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class KYCUpload(BaseModel):
+    id_card_base64: str
+    selfie_base64: str
+
+class PackagePurchase(BaseModel):
+    amount: int
+    transaction_id: str
+    screenshot_base64: str
+
+class TaskComplete(BaseModel):
+    task_id: str
+
+class SponsorInquiryModel(BaseModel):
+    name: str
+    email: EmailStr
+    country: str
+    promo_link: str
+    budget: str
+
+class TaskCreate(BaseModel):
+    title: str
+    url: str
+    task_type: str
+
+class BannerUpdate(BaseModel):
+    banner_base64: str
+
+class BinanceAddressUpdate(BaseModel):
+    binance_address: str
+
+class UserUpdate(BaseModel):
+    balance: Optional[float] = None
+    banned: Optional[bool] = None
+
+class KYCAction(BaseModel):
+    user_id: str
+    action: str
+
+def create_token(user_id: str, email: str, role: str) -> str:
+    payload = {
+        'user_id': user_id,
+        'email': email,
+        'role': role,
+        'exp': datetime.now(timezone.utc) + timedelta(days=30)
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail='Token expired')
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail='Invalid token')
+
+def generate_referral_code():
+    return str(uuid.uuid4())[:8].upper()
+
+async def calculate_referral_bonuses(user_id: str, amount: float, bonus_type: str):
+    user = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not user or not user.get('referred_by'):
+        return
     
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class StatusCheckCreate(BaseModel):
-    client_name: str
-
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
+    referrer = await db.users.find_one({'referral_code': user['referred_by']}, {'_id': 0})
+    if not referrer:
+        return
     
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
+    if bonus_type == 'instant':
+        level1_bonus = amount * 0.05
+        await db.users.update_one(
+            {'id': referrer['id']},
+            {'$inc': {'balance': level1_bonus}}
+        )
+        await db.transactions.insert_one({
+            'id': str(uuid.uuid4()),
+            'user_id': referrer['id'],
+            'type': 'referral_bonus_l1',
+            'amount': level1_bonus,
+            'status': 'completed',
+            'created_at': datetime.now(timezone.utc).isoformat()
+        })
+        
+        if referrer.get('referred_by'):
+            level2_referrer = await db.users.find_one({'referral_code': referrer['referred_by']}, {'_id': 0})
+            if level2_referrer:
+                level2_bonus = amount * 0.02
+                await db.users.update_one(
+                    {'id': level2_referrer['id']},
+                    {'$inc': {'balance': level2_bonus}}
+                )
+                await db.transactions.insert_one({
+                    'id': str(uuid.uuid4()),
+                    'user_id': level2_referrer['id'],
+                    'type': 'referral_bonus_l2',
+                    'amount': level2_bonus,
+                    'status': 'completed',
+                    'created_at': datetime.now(timezone.utc).isoformat()
+                })
     
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+    elif bonus_type == 'daily':
+        level1_bonus = amount * 0.05
+        await db.users.update_one(
+            {'id': referrer['id']},
+            {'$inc': {'balance': level1_bonus}}
+        )
+        await db.transactions.insert_one({
+            'id': str(uuid.uuid4()),
+            'user_id': referrer['id'],
+            'type': 'daily_referral_bonus_l1',
+            'amount': level1_bonus,
+            'status': 'completed',
+            'created_at': datetime.now(timezone.utc).isoformat()
+        })
+        
+        if referrer.get('referred_by'):
+            level2_referrer = await db.users.find_one({'referral_code': referrer['referred_by']}, {'_id': 0})
+            if level2_referrer:
+                level2_bonus = amount * 0.02
+                await db.users.update_one(
+                    {'id': level2_referrer['id']},
+                    {'$inc': {'balance': level2_bonus}}
+                )
+                await db.transactions.insert_one({
+                    'id': str(uuid.uuid4()),
+                    'user_id': level2_referrer['id'],
+                    'type': 'daily_referral_bonus_l2',
+                    'amount': level2_bonus,
+                    'status': 'completed',
+                    'created_at': datetime.now(timezone.utc).isoformat()
+                })
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
+async def check_milestone_bonuses(user_id: str):
+    level1_refs = await db.users.count_documents({'referred_by': await get_user_referral_code(user_id)})
     
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
+    if level1_refs >= 20:
+        already_awarded = await db.transactions.find_one({
+            'user_id': user_id,
+            'type': 'milestone_bonus_20_refs'
+        })
+        
+        if not already_awarded:
+            await db.users.update_one(
+                {'id': user_id},
+                {'$inc': {'balance': 50}}
+            )
+            await db.transactions.insert_one({
+                'id': str(uuid.uuid4()),
+                'user_id': user_id,
+                'type': 'milestone_bonus_20_refs',
+                'amount': 50,
+                'status': 'completed',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            })
 
-# Include the router in the main app
+async def get_user_referral_code(user_id: str):
+    user = await db.users.find_one({'id': user_id}, {'_id': 0})
+    return user.get('referral_code') if user else None
+
+async def daily_task_reset():
+    logger.info('Running daily task reset')
+    try:
+        today = datetime.now(timezone.utc).date().isoformat()
+        await db.task_completions.delete_many({'date': {'$ne': today}})
+        logger.info('Daily tasks reset completed')
+    except Exception as e:
+        logger.error(f'Error in daily task reset: {e}')
+
+async def process_daily_income():
+    logger.info('Processing daily income for active packages')
+    try:
+        active_packages = await db.packages.find({'is_active': True, 'days_remaining': {'$gt': 0}}).to_list(None)
+        
+        for package in active_packages:
+            user_id = package['user_id']
+            today = datetime.now(timezone.utc).date().isoformat()
+            
+            task_completed = await db.task_completions.find_one({
+                'user_id': user_id,
+                'date': today
+            })
+            
+            if task_completed:
+                daily_income = package['daily_income']
+                
+                await db.users.update_one(
+                    {'id': user_id},
+                    {'$inc': {'balance': daily_income}}
+                )
+                
+                await db.packages.update_one(
+                    {'id': package['id']},
+                    {'$inc': {'days_remaining': -1}}
+                )
+                
+                if package['days_remaining'] - 1 <= 0:
+                    await db.packages.update_one(
+                        {'id': package['id']},
+                        {'$set': {'is_active': False}}
+                    )
+                
+                await db.transactions.insert_one({
+                    'id': str(uuid.uuid4()),
+                    'user_id': user_id,
+                    'type': 'daily_income',
+                    'amount': daily_income,
+                    'status': 'completed',
+                    'created_at': datetime.now(timezone.utc).isoformat()
+                })
+                
+                await calculate_referral_bonuses(user_id, daily_income, 'daily')
+        
+        logger.info(f'Processed daily income for {len(active_packages)} packages')
+    except Exception as e:
+        logger.error(f'Error processing daily income: {e}')
+
+@api_router.post('/auth/signup')
+async def signup(data: UserSignup):
+    existing_user = await db.users.find_one({'email': data.email}, {'_id': 0})
+    if existing_user:
+        raise HTTPException(status_code=400, detail='Email already registered')
+    
+    hashed_password = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    user_id = str(uuid.uuid4())
+    referral_code = generate_referral_code()
+    
+    user_doc = {
+        'id': user_id,
+        'email': data.email,
+        'password': hashed_password,
+        'full_name': data.full_name,
+        'role': 'user',
+        'referral_code': referral_code,
+        'referred_by': data.referral_code,
+        'balance': 0,
+        'kyc_status': 'pending',
+        'kyc_id_card': None,
+        'kyc_selfie': None,
+        'banned': False,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    token = create_token(user_id, data.email, 'user')
+    
+    return {
+        'token': token,
+        'user': {
+            'id': user_id,
+            'email': data.email,
+            'full_name': data.full_name,
+            'role': 'user',
+            'referral_code': referral_code,
+            'kyc_status': 'pending'
+        }
+    }
+
+@api_router.post('/auth/login')
+async def login(data: UserLogin):
+    if data.email == ADMIN_EMAIL and data.password == ADMIN_PASSWORD:
+        admin_id = 'admin_id'
+        token = create_token(admin_id, ADMIN_EMAIL, 'admin')
+        return {
+            'token': token,
+            'user': {
+                'id': admin_id,
+                'email': ADMIN_EMAIL,
+                'full_name': 'Admin',
+                'role': 'admin'
+            }
+        }
+    
+    user = await db.users.find_one({'email': data.email}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=401, detail='Invalid credentials')
+    
+    if not bcrypt.checkpw(data.password.encode('utf-8'), user['password'].encode('utf-8')):
+        raise HTTPException(status_code=401, detail='Invalid credentials')
+    
+    if user.get('banned'):
+        raise HTTPException(status_code=403, detail='Account banned')
+    
+    token = create_token(user['id'], user['email'], user['role'])
+    
+    return {
+        'token': token,
+        'user': {
+            'id': user['id'],
+            'email': user['email'],
+            'full_name': user['full_name'],
+            'role': user['role'],
+            'referral_code': user['referral_code'],
+            'kyc_status': user['kyc_status'],
+            'balance': user['balance']
+        }
+    }
+
+@api_router.get('/auth/me')
+async def get_me(payload: dict = Depends(verify_token)):
+    if payload['role'] == 'admin':
+        return {
+            'id': 'admin_id',
+            'email': ADMIN_EMAIL,
+            'full_name': 'Admin',
+            'role': 'admin'
+        }
+    
+    user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0, 'password': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    return user
+
+@api_router.post('/kyc/upload')
+async def upload_kyc(data: KYCUpload, payload: dict = Depends(verify_token)):
+    if payload['role'] == 'admin':
+        raise HTTPException(status_code=403, detail='Admin cannot submit KYC')
+    
+    await db.users.update_one(
+        {'id': payload['user_id']},
+        {'$set': {
+            'kyc_id_card': data.id_card_base64,
+            'kyc_selfie': data.selfie_base64,
+            'kyc_status': 'under_review'
+        }}
+    )
+    
+    return {'message': 'KYC documents uploaded successfully', 'kyc_status': 'under_review'}
+
+@api_router.get('/kyc/status')
+async def get_kyc_status(payload: dict = Depends(verify_token)):
+    user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    return {'kyc_status': user.get('kyc_status', 'pending')}
+
+@api_router.post('/packages/purchase')
+async def purchase_package(data: PackagePurchase, payload: dict = Depends(verify_token)):
+    if payload['role'] == 'admin':
+        raise HTTPException(status_code=403, detail='Admin cannot purchase packages')
+    
+    user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    if user['kyc_status'] != 'approved':
+        raise HTTPException(status_code=403, detail='KYC must be approved before purchasing packages')
+    
+    if data.amount not in [25, 60]:
+        raise HTTPException(status_code=400, detail='Invalid package amount')
+    
+    daily_income = 1 if data.amount == 25 else 2.5
+    
+    transaction_doc = {
+        'id': str(uuid.uuid4()),
+        'user_id': payload['user_id'],
+        'type': 'package_purchase',
+        'amount': data.amount,
+        'status': 'pending',
+        'transaction_id': data.transaction_id,
+        'screenshot': data.screenshot_base64,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.transactions.insert_one(transaction_doc)
+    
+    return {'message': 'Package purchase request submitted. Awaiting admin approval.', 'transaction_id': transaction_doc['id']}
+
+@api_router.get('/packages/mine')
+async def get_my_packages(payload: dict = Depends(verify_token)):
+    packages = await db.packages.find({'user_id': payload['user_id']}, {'_id': 0}).to_list(None)
+    return {'packages': packages}
+
+@api_router.get('/tasks/daily')
+async def get_daily_tasks(payload: dict = Depends(verify_token)):
+    tasks = await db.tasks.find({}, {'_id': 0}).to_list(None)
+    
+    today = datetime.now(timezone.utc).date().isoformat()
+    completed_tasks = await db.task_completions.find({
+        'user_id': payload['user_id'],
+        'date': today
+    }, {'_id': 0}).to_list(None)
+    
+    completed_task_ids = [tc['task_id'] for tc in completed_tasks]
+    
+    for task in tasks:
+        task['completed'] = task['id'] in completed_task_ids
+    
+    return {'tasks': tasks}
+
+@api_router.post('/tasks/complete')
+async def complete_task(data: TaskComplete, payload: dict = Depends(verify_token)):
+    task = await db.tasks.find_one({'id': data.task_id}, {'_id': 0})
+    if not task:
+        raise HTTPException(status_code=404, detail='Task not found')
+    
+    today = datetime.now(timezone.utc).date().isoformat()
+    
+    existing_completion = await db.task_completions.find_one({
+        'user_id': payload['user_id'],
+        'task_id': data.task_id,
+        'date': today
+    })
+    
+    if existing_completion:
+        raise HTTPException(status_code=400, detail='Task already completed today')
+    
+    completion_doc = {
+        'id': str(uuid.uuid4()),
+        'user_id': payload['user_id'],
+        'task_id': data.task_id,
+        'date': today,
+        'completed_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.task_completions.insert_one(completion_doc)
+    
+    return {'message': 'Task marked as completed'}
+
+@api_router.get('/referrals/tree')
+async def get_referral_tree(payload: dict = Depends(verify_token)):
+    user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    level1_refs = await db.users.find(
+        {'referred_by': user['referral_code']},
+        {'_id': 0, 'id': 1, 'full_name': 1, 'email': 1, 'balance': 1, 'created_at': 1, 'referral_code': 1}
+    ).to_list(None)
+    
+    level2_refs = []
+    for l1_ref in level1_refs:
+        l2_refs = await db.users.find(
+            {'referred_by': l1_ref['referral_code']},
+            {'_id': 0, 'id': 1, 'full_name': 1, 'email': 1, 'balance': 1, 'created_at': 1}
+        ).to_list(None)
+        level2_refs.extend(l2_refs)
+    
+    return {
+        'level1': level1_refs,
+        'level2': level2_refs
+    }
+
+@api_router.get('/referrals/stats')
+async def get_referral_stats(payload: dict = Depends(verify_token)):
+    user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    level1_count = await db.users.count_documents({'referred_by': user['referral_code']})
+    
+    level1_refs = await db.users.find({'referred_by': user['referral_code']}, {'_id': 0, 'referral_code': 1}).to_list(None)
+    level2_count = 0
+    for l1_ref in level1_refs:
+        count = await db.users.count_documents({'referred_by': l1_ref['referral_code']})
+        level2_count += count
+    
+    return {
+        'level1_count': level1_count,
+        'level2_count': level2_count
+    }
+
+@api_router.post('/transactions/deposit')
+async def submit_deposit(data: PackagePurchase, payload: dict = Depends(verify_token)):
+    return await purchase_package(data, payload)
+
+@api_router.get('/transactions/history')
+async def get_transaction_history(payload: dict = Depends(verify_token)):
+    transactions = await db.transactions.find({'user_id': payload['user_id']}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    return {'transactions': transactions}
+
+@api_router.post('/sponsor/inquiry')
+async def submit_sponsor_inquiry(data: SponsorInquiryModel):
+    inquiry_doc = {
+        'id': str(uuid.uuid4()),
+        'name': data.name,
+        'email': data.email,
+        'country': data.country,
+        'promo_link': data.promo_link,
+        'budget': data.budget,
+        'status': 'new',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.sponsor_inquiries.insert_one(inquiry_doc)
+    
+    return {'message': 'Inquiry submitted successfully'}
+
+@api_router.get('/settings/banner')
+async def get_banner():
+    settings = await db.settings.find_one({'key': 'banner'}, {'_id': 0})
+    if settings:
+        return {'banner_url': settings.get('value')}
+    return {'banner_url': None}
+
+@api_router.get('/settings/binance')
+async def get_binance_address():
+    settings = await db.settings.find_one({'key': 'binance_address'}, {'_id': 0})
+    if settings:
+        return {'binance_address': settings.get('value')}
+    return {'binance_address': 'TBD'}
+
+@api_router.get('/admin/users')
+async def get_all_users(payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    users = await db.users.find({}, {'_id': 0, 'password': 0}).to_list(None)
+    return {'users': users}
+
+@api_router.post('/admin/users/{user_id}/update')
+async def update_user(user_id: str, data: UserUpdate, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    update_data = {}
+    if data.balance is not None:
+        update_data['balance'] = data.balance
+    if data.banned is not None:
+        update_data['banned'] = data.banned
+    
+    if update_data:
+        await db.users.update_one({'id': user_id}, {'$set': update_data})
+    
+    return {'message': 'User updated successfully'}
+
+@api_router.get('/admin/kyc/pending')
+async def get_pending_kyc(payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    users = await db.users.find(
+        {'kyc_status': 'under_review'},
+        {'_id': 0, 'password': 0}
+    ).to_list(None)
+    
+    return {'users': users}
+
+@api_router.post('/admin/kyc/action')
+async def kyc_action(data: KYCAction, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    if data.action not in ['approve', 'reject']:
+        raise HTTPException(status_code=400, detail='Invalid action')
+    
+    new_status = 'approved' if data.action == 'approve' else 'rejected'
+    
+    await db.users.update_one(
+        {'id': data.user_id},
+        {'$set': {'kyc_status': new_status}}
+    )
+    
+    return {'message': f'KYC {data.action}d successfully'}
+
+@api_router.get('/admin/tasks')
+async def get_all_tasks(payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    tasks = await db.tasks.find({}, {'_id': 0}).to_list(None)
+    return {'tasks': tasks}
+
+@api_router.post('/admin/tasks/create')
+async def create_task(data: TaskCreate, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    task_doc = {
+        'id': str(uuid.uuid4()),
+        'title': data.title,
+        'url': data.url,
+        'task_type': data.task_type,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.tasks.insert_one(task_doc)
+    
+    return {'message': 'Task created successfully', 'task': task_doc}
+
+@api_router.delete('/admin/tasks/{task_id}')
+async def delete_task(task_id: str, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    await db.tasks.delete_one({'id': task_id})
+    await db.task_completions.delete_many({'task_id': task_id})
+    
+    return {'message': 'Task deleted successfully'}
+
+@api_router.post('/admin/banner/upload')
+async def upload_banner(data: BannerUpdate, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    await db.settings.update_one(
+        {'key': 'banner'},
+        {'$set': {'value': data.banner_base64}},
+        upsert=True
+    )
+    
+    return {'message': 'Banner uploaded successfully'}
+
+@api_router.post('/admin/settings/binance')
+async def update_binance_address(data: BinanceAddressUpdate, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    await db.settings.update_one(
+        {'key': 'binance_address'},
+        {'$set': {'value': data.binance_address}},
+        upsert=True
+    )
+    
+    return {'message': 'Binance address updated successfully'}
+
+@api_router.get('/admin/inquiries')
+async def get_sponsor_inquiries(payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    inquiries = await db.sponsor_inquiries.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    return {'inquiries': inquiries}
+
+@api_router.get('/admin/transactions/pending')
+async def get_pending_transactions(payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    transactions = await db.transactions.find(
+        {'type': 'package_purchase', 'status': 'pending'},
+        {'_id': 0}
+    ).to_list(None)
+    
+    return {'transactions': transactions}
+
+@api_router.post('/admin/transactions/{transaction_id}/approve')
+async def approve_transaction(transaction_id: str, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    transaction = await db.transactions.find_one({'id': transaction_id}, {'_id': 0})
+    if not transaction:
+        raise HTTPException(status_code=404, detail='Transaction not found')
+    
+    if transaction['status'] != 'pending':
+        raise HTTPException(status_code=400, detail='Transaction already processed')
+    
+    amount = transaction['amount']
+    daily_income = 1 if amount == 25 else 2.5
+    
+    package_doc = {
+        'id': str(uuid.uuid4()),
+        'user_id': transaction['user_id'],
+        'amount': amount,
+        'daily_income': daily_income,
+        'days_remaining': 60,
+        'is_active': True,
+        'start_date': datetime.now(timezone.utc).isoformat(),
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.packages.insert_one(package_doc)
+    
+    await db.transactions.update_one(
+        {'id': transaction_id},
+        {'$set': {'status': 'approved'}}
+    )
+    
+    await calculate_referral_bonuses(transaction['user_id'], amount, 'instant')
+    
+    await check_milestone_bonuses(transaction['user_id'])
+    
+    user_packages = await db.packages.find(
+        {'user_id': transaction['user_id'], 'status': {'$ne': 'rejected'}}
+    ).to_list(None)
+    
+    small_packages = sum(1 for p in user_packages if p['amount'] == 25)
+    big_packages = sum(1 for p in user_packages if p['amount'] == 60)
+    
+    if small_packages >= 10:
+        already_awarded = await db.transactions.find_one({
+            'user_id': transaction['user_id'],
+            'type': 'loan_bonus_10_small'
+        })
+        if not already_awarded:
+            await db.users.update_one(
+                {'id': transaction['user_id']},
+                {'$inc': {'balance': 100}}
+            )
+            await db.transactions.insert_one({
+                'id': str(uuid.uuid4()),
+                'user_id': transaction['user_id'],
+                'type': 'loan_bonus_10_small',
+                'amount': 100,
+                'status': 'completed',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            })
+    
+    if big_packages >= 10:
+        already_awarded = await db.transactions.find_one({
+            'user_id': transaction['user_id'],
+            'type': 'loan_bonus_10_big'
+        })
+        if not already_awarded:
+            await db.users.update_one(
+                {'id': transaction['user_id']},
+                {'$inc': {'balance': 500}}
+            )
+            await db.transactions.insert_one({
+                'id': str(uuid.uuid4()),
+                'user_id': transaction['user_id'],
+                'type': 'loan_bonus_10_big',
+                'amount': 500,
+                'status': 'completed',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            })
+    
+    return {'message': 'Transaction approved and package activated'}
+
+@api_router.post('/admin/transactions/{transaction_id}/reject')
+async def reject_transaction(transaction_id: str, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    await db.transactions.update_one(
+        {'id': transaction_id},
+        {'$set': {'status': 'rejected'}}
+    )
+    
+    return {'message': 'Transaction rejected'}
+
 app.include_router(api_router)
 
 app.add_middleware(
@@ -77,13 +790,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+scheduler = AsyncIOScheduler()
+scheduler.add_job(daily_task_reset, 'cron', hour=0, minute=0)
+scheduler.add_job(process_daily_income, 'cron', hour=0, minute=5)
+
+@app.on_event("startup")
+async def startup_event():
+    scheduler.start()
+    logger.info('Scheduler started')
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    scheduler.shutdown()
     client.close()
