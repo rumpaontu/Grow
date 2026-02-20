@@ -239,13 +239,20 @@ export default function Dashboard() {
         axios.get(`${API}/notifications/unread-count`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
-      setNotifications(notificationsRes.data.notifications);
+      const newNotifications = notificationsRes.data.notifications;
+      setNotifications(newNotifications);
+      setUnreadCount(unreadCountRes.data.unread_count);
       
-      const newUnreadCount = unreadCountRes.data.unread_count;
-      if (newUnreadCount > unreadCount) {
+      // Play sound only for new notifications that haven't been played yet
+      const newNotificationIds = newNotifications
+        .filter(n => !n.read_by || !n.read_by.includes(user?.id))
+        .map(n => n.id)
+        .filter(id => !playedNotifications.has(id));
+      
+      if (newNotificationIds.length > 0) {
         notificationSound.play().catch(e => console.log('Audio play failed:', e));
+        setPlayedNotifications(prev => new Set([...prev, ...newNotificationIds]));
       }
-      setUnreadCount(newUnreadCount);
     } catch (error) {
       console.error('Failed to fetch notifications');
     }
