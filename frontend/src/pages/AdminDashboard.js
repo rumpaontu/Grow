@@ -316,6 +316,10 @@ export default function AdminDashboard() {
               <MessageSquare className="w-4 h-4 mr-2" />
               Inquiries
             </TabsTrigger>
+            <TabsTrigger value="notifications" data-testid="notifications-tab">
+              <Bell className="w-4 h-4 mr-2" />
+              Notifications
+            </TabsTrigger>
           </TabsList>
 
           {/* Users Tab */}
