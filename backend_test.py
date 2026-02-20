@@ -454,7 +454,6 @@ def main():
     
     kyc_upload_ok = tester.test_kyc_upload()
     kyc_status_ok = tester.test_kyc_status()
-    package_flow_ok = tester.test_package_flow()
     referral_ok = tester.test_referral_system()
     transaction_history_ok = tester.test_transaction_history()
     
@@ -465,6 +464,13 @@ def main():
     
     admin_endpoints_ok = tester.test_admin_endpoints()
     task_management_ok = tester.test_task_management()
+    
+    # Test complete KYC to package flow
+    print("\n" + "=" * 60)
+    print("PHASE 5: COMPLETE FLOWS")
+    print("=" * 60)
+    
+    complete_kyc_flow_ok = tester.test_complete_kyc_flow()
     
     # Summary
     print("\n" + "=" * 80)
