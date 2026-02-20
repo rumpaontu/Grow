@@ -28,6 +28,8 @@ export default function AdminDashboard() {
   const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
   const [allWithdrawals, setAllWithdrawals] = useState([]);
   const [minWithdrawal, setMinWithdrawal] = useState(5);
+  const [notifications, setNotifications] = useState([]);
+  const [newNotification, setNewNotification] = useState({ title: '', message: '', user_id: '' });
 
   useEffect(() => {
     fetchAdminData();
