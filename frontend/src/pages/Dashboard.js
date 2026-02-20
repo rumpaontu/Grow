@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { toast } from 'sonner';
-import { LogOut, Package, TrendingUp, Users, DollarSign, Clock, Play, CheckCircle, Copy } from 'lucide-react';
+import { LogOut, Package, TrendingUp, Users, DollarSign, Clock, Play, CheckCircle, Copy, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
