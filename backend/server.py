@@ -701,14 +701,22 @@ async def get_unread_count(payload: dict = Depends(verify_token)):
     if payload['role'] == 'admin':
         return {'unread_count': 0}
     
-    count = await db.notifications.count_documents({
+    # Get all notifications for this user
+    user_notifications = await db.notifications.find({
         '$or': [
-            {'user_id': payload['user_id'], 'is_read': False},
-            {'user_id': None, 'is_read': False}
+            {'user_id': payload['user_id']},
+            {'user_id': None}
         ]
-    })
+    }, {'_id': 0}).to_list(None)
     
-    return {'unread_count': count}
+    # Count only those where user hasn't read yet
+    unread_count = 0
+    for notif in user_notifications:
+        read_by = notif.get('read_by', [])
+        if payload['user_id'] not in read_by:
+            unread_count += 1
+    
+    return {'unread_count': unread_count}
 
 @api_router.post('/notifications/mark-read')
 async def mark_notification_read(data: NotificationRead, payload: dict = Depends(verify_token)):
