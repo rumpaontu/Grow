@@ -581,6 +581,77 @@ async def get_referral_stats(payload: dict = Depends(verify_token)):
         'level2_count': level2_count
     }
 
+@api_router.get('/referrals/earnings')
+async def get_referral_earnings(payload: dict = Depends(verify_token)):
+    user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    # Get all referral bonus transactions
+    transactions = await db.transactions.find({
+        'user_id': payload['user_id'],
+        'type': {'$in': ['referral_bonus_l1', 'referral_bonus_l2', 'daily_referral_bonus_l1', 'daily_referral_bonus_l2', 'milestone_bonus_20_refs', 'loan_bonus_10_small', 'loan_bonus_10_big']}
+    }, {'_id': 0}).to_list(None)
+    
+    # Calculate totals
+    instant_l1 = sum(t['amount'] for t in transactions if t['type'] == 'referral_bonus_l1')
+    instant_l2 = sum(t['amount'] for t in transactions if t['type'] == 'referral_bonus_l2')
+    daily_l1 = sum(t['amount'] for t in transactions if t['type'] == 'daily_referral_bonus_l1')
+    daily_l2 = sum(t['amount'] for t in transactions if t['type'] == 'daily_referral_bonus_l2')
+    milestone_bonus = sum(t['amount'] for t in transactions if t['type'] == 'milestone_bonus_20_refs')
+    loan_small = sum(t['amount'] for t in transactions if t['type'] == 'loan_bonus_10_small')
+    loan_big = sum(t['amount'] for t in transactions if t['type'] == 'loan_bonus_10_big')
+    
+    # Get milestone progress
+    level1_refs = await db.users.find({'referred_by': user['referral_code']}, {'_id': 0}).to_list(None)
+    active_level1_count = len(level1_refs)
+    milestone_progress = min(active_level1_count, 20)
+    milestone_unlocked = milestone_bonus > 0
+    
+    # Get loan progress
+    user_packages = await db.packages.find({'user_id': payload['user_id']}, {'_id': 0}).to_list(None)
+    small_packages_count = sum(1 for p in user_packages if p['amount'] == 25)
+    big_packages_count = sum(1 for p in user_packages if p['amount'] == 60)
+    
+    loan_small_progress = min(small_packages_count, 10)
+    loan_small_unlocked = loan_small > 0
+    loan_big_progress = min(big_packages_count, 10)
+    loan_big_unlocked = loan_big > 0
+    
+    return {
+        'instant_bonuses': {
+            'level1': instant_l1,
+            'level2': instant_l2,
+            'total': instant_l1 + instant_l2
+        },
+        'daily_bonuses': {
+            'level1': daily_l1,
+            'level2': daily_l2,
+            'total': daily_l1 + daily_l2
+        },
+        'milestone': {
+            'earned': milestone_bonus,
+            'progress': milestone_progress,
+            'target': 20,
+            'unlocked': milestone_unlocked
+        },
+        'loans': {
+            'small': {
+                'earned': loan_small,
+                'progress': loan_small_progress,
+                'target': 10,
+                'unlocked': loan_small_unlocked
+            },
+            'big': {
+                'earned': loan_big,
+                'progress': loan_big_progress,
+                'target': 10,
+                'unlocked': loan_big_unlocked
+            }
+        },
+        'total_earned': instant_l1 + instant_l2 + daily_l1 + daily_l2 + milestone_bonus + loan_small + loan_big
+    }
+
 @api_router.post('/transactions/deposit')
 async def submit_deposit(data: PackagePurchase, payload: dict = Depends(verify_token)):
     return await purchase_package(data, payload)
