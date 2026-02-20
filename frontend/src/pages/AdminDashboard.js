@@ -527,6 +527,85 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
+          {/* Withdrawals Tab */}
+          <TabsContent value="withdrawals" className="glass-effect p-6">
+            <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">Pending Withdrawals</h2>
+            <div className="space-y-3 mb-8">
+              {pendingWithdrawals.map((withdrawal) => (
+                <div key={withdrawal.id} className="bg-black/40 border border-white/10 p-4" data-testid={`pending-withdrawal-${withdrawal.id}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <p className="text-white font-semibold">${withdrawal.amount.toFixed(2)}</p>
+                        <span className="px-3 py-1 text-xs font-semibold bg-yellow-500/20 text-yellow-500">
+                          Pending
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">User: {withdrawal.user_name} ({withdrawal.user_email})</p>
+                      <p className="text-sm text-gold mt-1">To: {withdrawal.binance_address}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Requested: {new Date(withdrawal.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        data-testid={`approve-withdrawal-${withdrawal.id}-btn`}
+                        onClick={() => handleWithdrawalAction(withdrawal.id, 'approve')}
+                        className="bg-green-500 text-white hover:bg-green-600"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Approve
+                      </Button>
+                      <Button
+                        data-testid={`reject-withdrawal-${withdrawal.id}-btn`}
+                        onClick={() => handleWithdrawalAction(withdrawal.id, 'reject')}
+                        variant="outline"
+                        className="border-red-500/30 text-red-500"
+                      >
+                        <XCircle className="w-4 h-4 mr-2" />
+                        Reject
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {pendingWithdrawals.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No pending withdrawals</p>
+              )}
+            </div>
+
+            <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">All Withdrawals</h2>
+            <div className="space-y-3">
+              {allWithdrawals.map((withdrawal) => (
+                <div key={withdrawal.id} className="bg-black/40 border border-white/10 p-4" data-testid={`withdrawal-history-${withdrawal.id}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <p className="text-white font-semibold">${withdrawal.amount.toFixed(2)}</p>
+                        <span className={`px-3 py-1 text-xs font-semibold ${
+                          withdrawal.status === 'approved' ? 'bg-green-500/20 text-green-500' :
+                          withdrawal.status === 'rejected' ? 'bg-red-500/20 text-red-500' :
+                          'bg-yellow-500/20 text-yellow-500'
+                        }`}>
+                          {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">User: {withdrawal.user_name} ({withdrawal.user_email})</p>
+                      <p className="text-sm text-gold mt-1">To: {withdrawal.binance_address}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Requested: {new Date(withdrawal.created_at).toLocaleDateString()}
+                        {withdrawal.processed_at && ` | Processed: ${new Date(withdrawal.processed_at).toLocaleDateString()}`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {allWithdrawals.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No withdrawals yet</p>
+              )}
+            </div>
+          </TabsContent>
+
           {/* Inquiries Tab */}
           <TabsContent value="inquiries" className="glass-effect p-6">
             <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">Sponsor Inquiries</h2>
