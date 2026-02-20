@@ -280,6 +280,19 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gold font-montserrat">GrowVault</h1>
           <div className="flex items-center gap-4">
+            <Button
+              data-testid="notifications-btn"
+              onClick={() => setShowNotifications(true)}
+              variant="ghost"
+              className="relative text-white hover:text-gold"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <Badge className="absolute -top-1 -right-1 bg-gold text-black px-1.5 py-0.5 text-xs">
+                  {unreadCount}
+                </Badge>
+              )}
+            </Button>
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Welcome back,</p>
               <p className="text-white font-semibold">{user.full_name}</p>
