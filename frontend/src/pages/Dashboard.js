@@ -558,7 +558,92 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        {/* Withdrawal History */}
+        <div className="glass-effect p-6">
+          <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">Withdrawal History</h2>
+          <div className="space-y-3">
+            {withdrawals.map((withdrawal) => (
+              <div key={withdrawal.id} className="bg-black/40 border border-white/10 p-4 flex items-center justify-between" data-testid={`withdrawal-${withdrawal.id}`}>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <p className="text-white font-semibold">${withdrawal.amount.toFixed(2)}</p>
+                    <span className={`px-3 py-1 text-xs font-semibold ${
+                      withdrawal.status === 'approved' ? 'bg-green-500/20 text-green-500' :
+                      withdrawal.status === 'rejected' ? 'bg-red-500/20 text-red-500' :
+                      'bg-yellow-500/20 text-yellow-500'
+                    }`}>
+                      {withdrawal.status.charAt(0).toUpperCase() + withdrawal.status.slice(1)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">To: {withdrawal.binance_address}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Requested: {new Date(withdrawal.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {withdrawals.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">No withdrawal requests yet</p>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Withdrawal Dialog */}
+      <Dialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
+        <DialogContent className="bg-[#1A1A1A] border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-gold font-montserrat text-2xl">Withdraw Balance</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6 mt-4">
+            <div className="bg-black/40 border border-white/10 p-4">
+              <p className="text-sm text-muted-foreground mb-1">Available Balance</p>
+              <p className="text-2xl font-bold text-gold">${user?.balance?.toFixed(2) || '0.00'}</p>
+              <p className="text-xs text-muted-foreground mt-2">Minimum withdrawal: ${minWithdrawal}</p>
+            </div>
+
+            <div>
+              <Label htmlFor="withdraw_amount" className="text-white">Withdrawal Amount ($)</Label>
+              <Input
+                id="withdraw_amount"
+                type="number"
+                data-testid="withdraw-amount-input"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                className="bg-black/50 border-white/10 text-white mt-2"
+                placeholder={`Min: $${minWithdrawal}`}
+                min={minWithdrawal}
+                max={user?.balance || 0}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="binance_address" className="text-white">Your Binance TRC20 Address</Label>
+              <Input
+                id="binance_address"
+                data-testid="binance-address-input"
+                value={withdrawBinanceAddress}
+                onChange={(e) => setWithdrawBinanceAddress(e.target.value)}
+                className="bg-black/50 border-white/10 text-white mt-2"
+                placeholder="Enter your Binance TRC20 address"
+              />
+              <p className="text-xs text-muted-foreground mt-2">
+                Make sure your address is correct. Funds sent to wrong address cannot be recovered.
+              </p>
+            </div>
+
+            <Button
+              data-testid="submit-withdrawal-btn"
+              onClick={handleWithdrawalSubmit}
+              className="w-full bg-gold text-black hover:bg-accent py-6"
+            >
+              <Wallet className="w-4 h-4 mr-2" />
+              Submit Withdrawal Request
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
