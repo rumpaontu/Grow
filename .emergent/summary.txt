@@ -1,0 +1,160 @@
+<analysis>**original_problem_statement**: The user wants to build a high-end, USA-based Corporate Investment & MLM Web Application named GrowVault.
+
+**PRODUCT REQUIREMENTS:**
+1.  **Public Interface:**
+    *   Professional landing page with a Dark Grey & Gold theme.
+    *   Display stats: '3+ Years in Market', '500k+ Investors'.
+    *   'As a Sponsor' button: A lead-gen form (Name, Email, Country, Promotion Link, Budget) sending data to an 'Inquiries' section in the Admin Panel.
+    *   'As an Investor' button: Leads to a Login/Signup portal.
+2.  **Investor Portal & Task Logic:**
+    *   Users must complete daily YouTube view/like tasks (with a 30s timer) to receive daily income. No task completion means no income for that day.
+    *   Investment Packages: 5 for /day (60 days), 0 for .5/day (60 days).
+    *   A scheduler to reset task status for all users at midnight daily.
+3.  **Referral & Bonus System:**
+    *   **Level 1 (Direct):** 5% instant bonus on package purchase + 5% recurring daily bonus from their task earnings.
+    *   **Level 2 (Indirect):** 2% instant bonus on package purchase + 2% recurring daily bonus from their task earnings.
+    *   **Milestone Bonus:** Automatic 0 bonus for achieving 20 active Level 1 referrals.
+    *   **Loan/Special Bonus:** Unlock a 00 loan after 10 small packages purchased by referrals; 00 bonus after 10 big packages.
+    *   All bonus systems should be displayed attractively with separate counters on the user's profile.
+4.  **Admin Control Panel:**
+    *   Admin login:  / .
+    *   Unified login page recognizes admin credentials.
+    *   Manage Users: Approve/Reject KYC, edit balances, ban users.
+    *   Manage Content: Add/Delete daily tasks, change sponsor banner ads.
+    *   Manage Finance: Dynamically change the Binance TRC20 wallet address for deposits and manage withdrawal requests.
+    *   Manage Notifications: Send announcements to all users.
+5.  **UI/UX & Security:**
+    *   Luxury Dark Mode, Glassmorphism, Montserrat font.
+    *   Dashboard must show 'Days Remaining' for packages and a Referral Tree.
+    *   Mandatory KYC approval before a user can access their dashboard.
+
+**User's preferred language**: English
+
+**what currently exists?**
+A full-stack MLM application (React frontend, FastAPI backend) has been built. The core functionalities are in place: user authentication (registration/login), an admin panel for managing users, KYC, tasks, and withdrawals. The investor dashboard allows users to complete daily tasks to earn income, which is added to their balance instantly. A complete withdrawal system with admin approval and a configurable minimum amount is functional. A notification system is also in place for admin announcements and automatic alerts, though the sound feature was removed at the user's request.
+
+**Last working item**:
+-   **Last item agent was working**: The user requested the implementation of the 2-tier referral system, milestone bonuses, and loan/special bonuses, along with an attractive UI on the dashboard to display and count these earnings separately. The agent acknowledged the request and was about to begin implementation.
+-   **Status**: NOT STARTED
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: both
+-   **User Testing Done**: N
+
+**All Pending/In progress Issue list**:
+There are no pending issues or bugs. The work is focused on implementing new features.
+
+**In progress Task List**:
+There are no tasks currently in progress.
+
+**Upcoming and Future Tasks**
+-   **P0: Implement Referral, Milestone, and Loan Systems**
+    -   **Description:** This is the highest priority task. It involves creating the entire bonus and referral logic on the backend and building the corresponding UI on the user dashboard.
+    -   **Backend:**
+        -   Modify user models to track referral relationships (direct/indirect), referral counts, and package purchase history.
+        -   Implement logic to award instant bonuses (5% L1, 2% L2) upon a referral's package purchase.
+        -   Implement logic to award recurring daily bonuses (5% L1, 2% L2) based on referral task earnings.
+        -   Create a mechanism to automatically award a 0 milestone bonus when a user reaches 20 active Level 1 referrals.
+        -   Implement tracking for referral package purchases to unlock the 00 loan (10 small packages) and 00 bonus (10 big packages).
+    -   **Frontend ():**
+        -   Design and add new UI components to the dashboard to attractively display all referral earnings, milestone progress, and loan eligibility.
+        -   Include separate, clearly labeled counters for each bonus type.
+        -   Implement the Referral Tree view to show Level 1 & 2 member details (name, balance, status).
+
+**Completed work in this session**
+-   **Initial Scaffolding & Authentication:** Created the full-stack app, user registration, and login. (DONE)
+-   **Admin & User Dashboards:** Built the admin panel for management and the user dashboard for tasks. (DONE)
+-   **Instant Task Rewards:** Implemented logic to add earnings to a user's balance immediately after task completion. (DONE)
+-   **Withdrawal System:** Created a full withdrawal workflow, including user requests, admin approval, and a configurable minimum withdrawal amount. (DONE)
+-   **Notification System:** Implemented admin-to-user notifications and automatic alerts for deposits, withdrawals, and tasks. (DONE)
+-   **Read/Unread Notifications:** Refined the notification system to track read status and update the notification counter correctly. (DONE)
+-   **Sound System Removal:** Added and subsequently removed the notification sound system per user request. (DONE)
+
+**Earlier issues found/mentioned but not fixed**
+-   None. All identified issues have been resolved.
+
+**Known issue recurrence from previous fork**
+-   None.
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Backend**: FastAPI, Motor (async MongoDB driver), Pydantic
+-   **Frontend**: React, Tailwind CSS, Axios, Sonner (for toasts)
+-   **Database**: MongoDB
+-   **Architecture**: RESTful API-based full-stack application.
+
+**key DB schema**
+-   **users**: 
+-   **packages**: 
+-   **user_packages**: 
+-   **tasks**: 
+-   **completed_tasks**: 
+-   **withdrawals**: 
+-   **notifications**: 
+-   **settings**:  (e.g., , )
+-   **inquiries**: 
+
+**changes in tech stack**
+-   None.
+
+**All files of reference**
+-   : Contains all backend logic, database models, and API endpoints.
+-   : The primary interface for authenticated users. This file will be heavily modified for the upcoming referral system task.
+-   : The interface for the administrator.
+-   : The public-facing entry point of the application.
+
+**Areas that need refactoring**:
+-   The main page files (, ) are becoming large and monolithic. The upcoming referral system implementation is a good opportunity to break down UI sections (e.g., Tasks, Withdrawals, Referrals) into smaller, reusable components to improve maintainability.
+
+**key api endpoints**
+-   
+-   
+-   
+-   
+-   
+-   
+-   
+
+**Critical Info for New Agent**
+-   The next and most critical task is to implement the entire referral and bonus system as detailed in the original problem statement. This is a major feature that is currently not started.
+-   All financial actions (deposits/withdrawals) are based on a manual approval flow managed by the admin. The application's role is to track these requests and balances.
+-   The UI must adhere to the specified luxury dark mode with a Dark Grey & Gold theme.
+-   The Referral Tree is a specific UI requirement for the upcoming task.
+
+**documents and test reports created in this job**
+-   
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **Request:** Implement the Tier Referral & Bonus System, Milestone bonus, and Loan/Special bonus, and display them attractively. **Status:** Pending.
+2.  **Request:** Turn off the sound system. **Status:** Completed.
+3.  **Feedback:** Notification sound repeats, and the counter is not resetting. **Status:** Completed.
+4.  **Feedback:** Sound plays repeatedly; wants sound alerts for financial/task events. **Status:** Completed (superseded by sound removal).
+5.  **Request:** Show minimum withdrawal on the user profile and add a sound-enabled notification system. **Status:** Completed (superseded by sound removal).
+6.  **Request:** Add a withdrawal option with an admin-configurable minimum. **Status:** Completed.
+7.  **Feedback:** Task completion should automatically add balance to the profile. **Status:** Completed.
+8.  **Clarification:** Confirmed manual verification flows and provided site name/slogan. **Status:** Actioned.
+9.  **Message:** when task will be completed balance will be add automatically in user profile. **Status:** Actioned.
+10. **Message:** now need withdraw option.... **Status:** Actioned.
+
+**Project Health Check:**
+-   **Working:** The application is fully functional with all implemented features.
+-   **Broken:** None.
+-   **Mocked:** None.
+
+**3rd Party Integrations**
+-   None.
+
+**Testing status**
+-   **Testing agent used after significant changes**: YES
+-   **Troubleshoot agent used after agent stuck in loop**: NO
+-   **Test files created**: []
+-   **Known regressions**: None
+
+**Credentials to test flow:**
+-   **Admin Email**: 
+-   **Admin Password**: 
+
+**What agent forgot to execute**
+-   The Referral Tree showing Level 1 & 2 member details (name, balance, status) was requested in the original problem statement but has not been implemented yet. This needs to be included in the upcoming task for the referral system.
+-   The lead-generation form for Sponsors was implemented, but its full flow and the display of inquiries in the admin panel were never explicitly tested or verified via screenshots.</analysis>
