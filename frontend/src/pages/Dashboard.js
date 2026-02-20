@@ -28,6 +28,11 @@ export default function Dashboard() {
   const [screenshot, setScreenshot] = useState(null);
   const [activeTimer, setActiveTimer] = useState(null);
   const [timerSeconds, setTimerSeconds] = useState({});
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawBinanceAddress, setWithdrawBinanceAddress] = useState('');
+  const [minWithdrawal, setMinWithdrawal] = useState(5);
+  const [withdrawals, setWithdrawals] = useState([]);
 
   useEffect(() => {
     fetchData();
