@@ -83,6 +83,17 @@ class KYCAction(BaseModel):
     user_id: str
     action: str
 
+class WithdrawalRequest(BaseModel):
+    amount: float
+    binance_address: str
+
+class WithdrawalAction(BaseModel):
+    withdrawal_id: str
+    action: str
+
+class MinWithdrawalUpdate(BaseModel):
+    min_withdrawal_amount: float
+
 def create_token(user_id: str, email: str, role: str) -> str:
     payload = {
         'user_id': user_id,
