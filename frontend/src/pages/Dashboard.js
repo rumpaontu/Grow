@@ -46,14 +46,16 @@ export default function Dashboard() {
     }
 
     try {
-      const [userRes, packagesRes, tasksRes, refStatsRes, refTreeRes, bannerRes, binanceRes] = await Promise.all([
+      const [userRes, packagesRes, tasksRes, refStatsRes, refTreeRes, bannerRes, binanceRes, minWithdrawalRes, withdrawalsRes] = await Promise.all([
         axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/packages/mine`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/tasks/daily`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/referrals/stats`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/referrals/tree`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/settings/banner`),
-        axios.get(`${API}/settings/binance`)
+        axios.get(`${API}/settings/binance`),
+        axios.get(`${API}/settings/min-withdrawal`),
+        axios.get(`${API}/withdrawals/mine`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       setUser(userRes.data);
@@ -63,6 +65,8 @@ export default function Dashboard() {
       setReferralTree(refTreeRes.data);
       setBanner(bannerRes.data.banner_url);
       setBinanceAddress(binanceRes.data.binance_address);
+      setMinWithdrawal(minWithdrawalRes.data.min_withdrawal_amount);
+      setWithdrawals(withdrawalsRes.data.withdrawals);
 
       if (userRes.data.kyc_status === 'under_review') {
         toast.info('Your KYC is under review. Some features are limited.');
