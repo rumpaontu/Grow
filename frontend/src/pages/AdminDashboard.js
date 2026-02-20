@@ -689,6 +689,90 @@ export default function AdminDashboard() {
               )}
             </div>
           </TabsContent>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications" className="glass-effect p-6">
+            <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">Send Notification</h2>
+            
+            <div className="bg-black/40 border border-white/10 p-6 mb-8">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="notif_title" className="text-white">Title</Label>
+                  <Input
+                    id="notif_title"
+                    data-testid="notif-title-input"
+                    value={newNotification.title}
+                    onChange={(e) => setNewNotification({ ...newNotification, title: e.target.value })}
+                    className="bg-black/50 border-white/10 text-white mt-2"
+                    placeholder="Important Update"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="notif_message" className="text-white">Message</Label>
+                  <textarea
+                    id="notif_message"
+                    data-testid="notif-message-input"
+                    value={newNotification.message}
+                    onChange={(e) => setNewNotification({ ...newNotification, message: e.target.value })}
+                    className="w-full bg-black/50 border border-white/10 text-white mt-2 p-3 min-h-[100px]"
+                    placeholder="Enter notification message..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="notif_user" className="text-white">Send To (Optional - Leave empty for broadcast)</Label>
+                  <select
+                    id="notif_user"
+                    data-testid="notif-user-select"
+                    value={newNotification.user_id}
+                    onChange={(e) => setNewNotification({ ...newNotification, user_id: e.target.value })}
+                    className="w-full bg-black/50 border border-white/10 text-white mt-2 p-3"
+                  >
+                    <option value="">All Users (Broadcast)</option>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.full_name} ({user.email})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button
+                  data-testid="send-notification-btn"
+                  onClick={handleCreateNotification}
+                  className="bg-gold text-black hover:bg-accent"
+                >
+                  <Bell className="w-4 h-4 mr-2" />
+                  Send Notification
+                </Button>
+              </div>
+            </div>
+
+            <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">All Notifications</h2>
+            <div className="space-y-3">
+              {notifications.map((notif) => (
+                <div key={notif.id} className="bg-black/40 border border-white/10 p-4 flex items-center justify-between" data-testid={`notif-item-${notif.id}`}>
+                  <div className="flex-1">
+                    <h3 className="text-white font-semibold mb-1">{notif.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-2">{notif.message}</p>
+                    <p className="text-xs text-muted-foreground">
+                      To: {notif.user_name || 'All Users'} | Sent: {new Date(notif.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <Button
+                    data-testid={`delete-notif-${notif.id}-btn`}
+                    onClick={() => handleDeleteNotification(notif.id)}
+                    variant="outline"
+                    className="border-red-500/30 text-red-500"
+                  >
+                    Delete
+                  </Button>
+                </div>
+              ))}
+              {notifications.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No notifications sent yet</p>
+              )}
+            </div>
+          </TabsContent>
+
         </Tabs>
       </div>
 
