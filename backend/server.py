@@ -465,7 +465,49 @@ async def complete_task(data: TaskComplete, payload: dict = Depends(verify_token
     
     await db.task_completions.insert_one(completion_doc)
     
-    return {'message': 'Task marked as completed'}
+    active_packages = await db.packages.find({
+        'user_id': payload['user_id'],
+        'is_active': True,
+        'days_remaining': {'$gt': 0}
+    }).to_list(None)
+    
+    total_daily_income = 0
+    for package in active_packages:
+        total_daily_income += package['daily_income']
+        
+        await db.packages.update_one(
+            {'id': package['id']},
+            {'$inc': {'days_remaining': -1}}
+        )
+        
+        if package['days_remaining'] - 1 <= 0:
+            await db.packages.update_one(
+                {'id': package['id']},
+                {'$set': {'is_active': False}}
+            )
+    
+    if total_daily_income > 0:
+        await db.users.update_one(
+            {'id': payload['user_id']},
+            {'$inc': {'balance': total_daily_income}}
+        )
+        
+        await db.transactions.insert_one({
+            'id': str(uuid.uuid4()),
+            'user_id': payload['user_id'],
+            'type': 'daily_income',
+            'amount': total_daily_income,
+            'status': 'completed',
+            'created_at': datetime.now(timezone.utc).isoformat()
+        })
+        
+        await calculate_referral_bonuses(payload['user_id'], total_daily_income, 'daily')
+    
+    return {
+        'message': 'Task completed successfully!',
+        'daily_income_added': total_daily_income,
+        'balance_updated': True
+    }
 
 @api_router.get('/referrals/tree')
 async def get_referral_tree(payload: dict = Depends(verify_token)):
