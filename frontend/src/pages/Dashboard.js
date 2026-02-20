@@ -37,8 +37,6 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notificationSound] = useState(new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjeL0fPTgjMGHGy57+SfUgwOVKzn77RgGwU7k9n0yX0pBSh+zPLaizsIHGu37OihUQwPU6zn77RgGwU7k9n0yX0pBSh+zPLaizsIHGu37OihUQwPU6zn77RgGwU7k9n0yX0pBSh+zPLaizsIHGu37OihUQwPU6zn77RgGwU7k9n0yX0pBSh+zPLaizsIHGu37OihUQwPU6zn77RgGwU7k9n0yX0pBSh+zPLaizsIHGu37OihUQwPU6zn77RgGwU7k9n0yX0pBSh+zPLaizsIHGu37OihUQwPU6zn77RgGwU7k9n0yX0pBSh+zPLaizsIHGu37OihUQwPU6zn77RgGwU7k9n0yX0pBSh+zPLaizsIHGu37OihUQwPU6zn77RgGwU7k9n0yX0pBSh+'));
-  const [playedNotifications, setPlayedNotifications] = useState(new Set());
 
 
   useEffect(() => {
