@@ -694,6 +694,11 @@ async def get_my_notifications(payload: dict = Depends(verify_token)):
         {'_id': 0}
     ).sort('created_at', -1).to_list(None)
     
+    # Add is_unread field for each notification
+    for notif in notifications:
+        read_by = notif.get('read_by', [])
+        notif['is_unread'] = payload['user_id'] not in read_by
+    
     return {'notifications': notifications}
 
 @api_router.get('/notifications/unread-count')
