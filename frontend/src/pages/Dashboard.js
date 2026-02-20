@@ -145,6 +145,7 @@ export default function Dashboard() {
       }
       
       fetchData();
+      fetchNotifications();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Failed to complete task');
     }
