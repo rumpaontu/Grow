@@ -859,6 +859,56 @@ async def update_min_withdrawal(data: MinWithdrawalUpdate, payload: dict = Depen
     
     return {'message': 'Minimum withdrawal amount updated successfully'}
 
+@api_router.post('/admin/notifications/create')
+async def create_notification(data: NotificationCreate, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    notification_doc = {
+        'id': str(uuid.uuid4()),
+        'title': data.title,
+        'message': data.message,
+        'user_id': data.user_id,
+        'is_read': False,
+        'read_by': [],
+        'created_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.notifications.insert_one(notification_doc)
+    
+    if data.user_id:
+        return {'message': f'Notification sent to user successfully'}
+    else:
+        return {'message': 'Notification broadcast to all users successfully'}
+
+@api_router.get('/admin/notifications/all')
+async def get_all_notifications(payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    notifications = await db.notifications.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    
+    for notif in notifications:
+        if notif.get('user_id'):
+            user = await db.users.find_one({'id': notif['user_id']}, {'_id': 0})
+            if user:
+                notif['user_name'] = user.get('full_name')
+                notif['user_email'] = user.get('email')
+        else:
+            notif['user_name'] = 'All Users'
+            notif['user_email'] = 'Broadcast'
+    
+    return {'notifications': notifications}
+
+@api_router.delete('/admin/notifications/{notification_id}')
+async def delete_notification(notification_id: str, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    await db.notifications.delete_one({'id': notification_id})
+    
+    return {'message': 'Notification deleted successfully'}
+
 @api_router.get('/admin/withdrawals/pending')
 async def get_pending_withdrawals(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
