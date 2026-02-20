@@ -41,13 +41,16 @@ export default function AdminDashboard() {
     }
 
     try {
-      const [usersRes, kycRes, tasksRes, inquiriesRes, transRes, binanceRes] = await Promise.all([
+      const [usersRes, kycRes, tasksRes, inquiriesRes, transRes, binanceRes, pendingWithdrawalsRes, allWithdrawalsRes, minWithdrawalRes] = await Promise.all([
         axios.get(`${API}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/admin/kyc/pending`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/admin/tasks`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/admin/inquiries`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/admin/transactions/pending`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API}/settings/binance`)
+        axios.get(`${API}/settings/binance`),
+        axios.get(`${API}/admin/withdrawals/pending`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/admin/withdrawals/all`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/settings/min-withdrawal`)
       ]);
 
       setUsers(usersRes.data.users);
@@ -56,6 +59,9 @@ export default function AdminDashboard() {
       setInquiries(inquiriesRes.data.inquiries);
       setPendingTransactions(transRes.data.transactions);
       setBinanceAddress(binanceRes.data.binance_address);
+      setPendingWithdrawals(pendingWithdrawalsRes.data.withdrawals);
+      setAllWithdrawals(allWithdrawalsRes.data.withdrawals);
+      setMinWithdrawal(minWithdrawalRes.data.min_withdrawal_amount);
     } catch (error) {
       toast.error('Failed to load admin data');
       if (error.response?.status === 401 || error.response?.status === 403) {
