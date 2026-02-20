@@ -227,6 +227,43 @@ export default function Dashboard() {
       toast.error(error.response?.data?.detail || 'Failed to submit withdrawal request');
     }
   };
+  const fetchNotifications = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      const [notificationsRes, unreadCountRes] = await Promise.all([
+        axios.get(`${API}/notifications/mine`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/notifications/unread-count`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+
+      setNotifications(notificationsRes.data.notifications);
+      
+      const newUnreadCount = unreadCountRes.data.unread_count;
+      if (newUnreadCount > unreadCount) {
+        notificationSound.play().catch(e => console.log('Audio play failed:', e));
+      }
+      setUnreadCount(newUnreadCount);
+    } catch (error) {
+      console.error('Failed to fetch notifications');
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId) => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        `${API}/notifications/mark-read`,
+        { notification_id: notificationId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchNotifications();
+    } catch (error) {
+      console.error('Failed to mark notification as read');
+    }
+  };
+
+
 
   if (!user) {
     return (
