@@ -521,6 +521,16 @@ async def complete_task(data: TaskComplete, payload: dict = Depends(verify_token
         })
         
         await calculate_referral_bonuses(payload['user_id'], total_daily_income, 'daily')
+        
+        await db.notifications.insert_one({
+            'id': str(uuid.uuid4()),
+            'title': 'Task Completed!',
+            'message': f'You earned ${total_daily_income:.2f} from completing your daily task. Keep up the great work!',
+            'user_id': payload['user_id'],
+            'is_read': False,
+            'read_by': [],
+            'created_at': datetime.now(timezone.utc).isoformat()
+        })
     
     return {
         'message': 'Task completed successfully!',
