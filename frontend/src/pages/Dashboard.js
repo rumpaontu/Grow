@@ -715,6 +715,48 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Notifications Dialog */}
+      <Dialog open={showNotifications} onOpenChange={setShowNotifications}>
+        <DialogContent className="bg-[#1A1A1A] border-white/10 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-gold font-montserrat text-2xl">Notifications</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 mt-4 max-h-[500px] overflow-y-auto">
+            {notifications.map((notification) => {
+              const isRead = notification.read_by && notification.read_by.includes(user?.id);
+              return (
+                <div
+                  key={notification.id}
+                  className={`p-4 border transition-all cursor-pointer ${
+                    isRead
+                      ? 'bg-black/20 border-white/5'
+                      : 'bg-gold/10 border-gold/30'
+                  }`}
+                  onClick={() => !isRead && handleMarkAsRead(notification.id)}
+                  data-testid={`notification-${notification.id}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="text-white font-semibold mb-1">{notification.title}</h4>
+                      <p className="text-sm text-muted-foreground mb-2">{notification.message}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(notification.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    {!isRead && (
+                      <Badge className="bg-gold text-black ml-2">New</Badge>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {notifications.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">No notifications</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
