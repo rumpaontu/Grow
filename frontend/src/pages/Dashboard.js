@@ -81,12 +81,7 @@ export default function Dashboard() {
       setMinWithdrawal(minWithdrawalRes.data.min_withdrawal_amount);
       setWithdrawals(withdrawalsRes.data.withdrawals);
       setNotifications(notificationsRes.data.notifications);
-      
-      const newUnreadCount = unreadCountRes.data.unread_count;
-      if (newUnreadCount > unreadCount) {
-        notificationSound.play().catch(e => console.log('Audio play failed:', e));
-      }
-      setUnreadCount(newUnreadCount);
+      setUnreadCount(unreadCountRes.data.unread_count);
 
       if (userRes.data.kyc_status === 'under_review') {
         toast.info('Your KYC is under review. Some features are limited.');
