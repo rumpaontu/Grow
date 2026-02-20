@@ -624,9 +624,15 @@ async def create_task(data: TaskCreate, payload: dict = Depends(verify_token)):
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
-    await db.tasks.insert_one(task_doc)
+    result = await db.tasks.insert_one(task_doc)
     
-    return {'message': 'Task created successfully', 'task': task_doc}
+    return {'message': 'Task created successfully', 'task': {
+        'id': task_doc['id'],
+        'title': task_doc['title'],
+        'url': task_doc['url'],
+        'task_type': task_doc['task_type'],
+        'created_at': task_doc['created_at']
+    }}
 
 @api_router.delete('/admin/tasks/{task_id}')
 async def delete_task(task_id: str, payload: dict = Depends(verify_token)):
