@@ -478,6 +478,32 @@ export default function AdminDashboard() {
             </div>
 
             <div>
+              <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">Minimum Withdrawal Amount</h2>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="min_withdrawal" className="text-white">Minimum Amount ($)</Label>
+                  <Input
+                    id="min_withdrawal"
+                    type="number"
+                    data-testid="min-withdrawal-input"
+                    value={minWithdrawal}
+                    onChange={(e) => setMinWithdrawal(e.target.value)}
+                    className="bg-black/50 border-white/10 text-white mt-2"
+                    placeholder="5"
+                    min="0"
+                  />
+                </div>
+                <Button
+                  data-testid="update-min-withdrawal-btn"
+                  onClick={handleUpdateMinWithdrawal}
+                  className="bg-gold text-black hover:bg-accent"
+                >
+                  Update Minimum Amount
+                </Button>
+              </div>
+            </div>
+
+            <div>
               <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">Banner Ad</h2>
               <div className="space-y-4">
                 <div>
