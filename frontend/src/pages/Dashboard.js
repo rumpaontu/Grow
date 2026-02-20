@@ -241,17 +241,6 @@ export default function Dashboard() {
       const newNotifications = notificationsRes.data.notifications;
       setNotifications(newNotifications);
       setUnreadCount(unreadCountRes.data.unread_count);
-      
-      // Play sound only for NEW unread notifications that haven't been played yet
-      const unreadNotificationIds = newNotifications
-        .filter(n => n.is_unread)
-        .map(n => n.id)
-        .filter(id => !playedNotifications.has(id));
-      
-      if (unreadNotificationIds.length > 0) {
-        notificationSound.play().catch(e => console.log('Audio play failed:', e));
-        setPlayedNotifications(prev => new Set([...prev, ...unreadNotificationIds]));
-      }
     } catch (error) {
       console.error('Failed to fetch notifications');
     }
