@@ -171,6 +171,43 @@ export default function Dashboard() {
     toast.success('Referral link copied!');
   };
 
+  const handleWithdrawalSubmit = async () => {
+    if (!withdrawAmount || !withdrawBinanceAddress) {
+      toast.error('Please provide withdrawal amount and Binance address');
+      return;
+    }
+
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount < minWithdrawal) {
+      toast.error(`Minimum withdrawal amount is $${minWithdrawal}`);
+      return;
+    }
+
+    if (amount > user.balance) {
+      toast.error('Insufficient balance');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        `${API}/withdrawals/request`,
+        {
+          amount: amount,
+          binance_address: withdrawBinanceAddress
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Withdrawal request submitted! Awaiting admin approval.');
+      setShowWithdrawDialog(false);
+      setWithdrawAmount('');
+      setWithdrawBinanceAddress('');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to submit withdrawal request');
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-dark-obsidian flex items-center justify-center">
