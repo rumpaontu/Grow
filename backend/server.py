@@ -1112,6 +1112,16 @@ async def approve_transaction(transaction_id: str, payload: dict = Depends(verif
                 'created_at': datetime.now(timezone.utc).isoformat()
             })
     
+    await db.notifications.insert_one({
+        'id': str(uuid.uuid4()),
+        'title': 'Deposit Approved!',
+        'message': f'Your ${amount} deposit has been approved. Your package is now active and earning ${daily_income}/day for 60 days!',
+        'user_id': transaction['user_id'],
+        'is_read': False,
+        'read_by': [],
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
     return {'message': 'Transaction approved and package activated'}
 
 @api_router.post('/admin/transactions/{transaction_id}/reject')
