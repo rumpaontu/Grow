@@ -748,7 +748,7 @@ export default function Dashboard() {
           </DialogHeader>
           <div className="space-y-3 mt-4 max-h-[500px] overflow-y-auto">
             {notifications.map((notification) => {
-              const isRead = notification.read_by && notification.read_by.includes(user?.id);
+              const isRead = !notification.is_unread;
               return (
                 <div
                   key={notification.id}
