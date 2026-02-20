@@ -36,10 +36,11 @@ class GrowVaultAPITester:
         if headers:
             test_headers.update(headers)
             
-        if auth_required and self.token:
-            test_headers['Authorization'] = f'Bearer {self.token}'
-        elif auth_required and self.admin_token and 'admin' in name.lower():
-            test_headers['Authorization'] = f'Bearer {self.admin_token}'
+        if auth_required:
+            if 'admin' in name.lower() and self.admin_token:
+                test_headers['Authorization'] = f'Bearer {self.admin_token}'
+            elif self.token:
+                test_headers['Authorization'] = f'Bearer {self.token}'
 
         print(f"\n🔍 Testing {name}...")
         print(f"   URL: {url}")
