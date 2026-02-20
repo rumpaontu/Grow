@@ -41,6 +41,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchData();
+    
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 10000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const fetchData = async () => {
