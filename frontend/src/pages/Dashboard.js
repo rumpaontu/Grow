@@ -333,6 +333,7 @@ export default function Dashboard() {
             <DollarSign className="w-8 h-8 text-gold mb-2" />
             <p className="text-sm text-muted-foreground">Balance</p>
             <h3 className="text-3xl font-bold text-white font-montserrat">${user.balance?.toFixed(2) || '0.00'}</h3>
+            <p className="text-xs text-muted-foreground mt-2">Min. Withdrawal: ${minWithdrawal}</p>
             <Button
               data-testid="withdraw-btn"
               onClick={() => setShowWithdrawDialog(true)}
