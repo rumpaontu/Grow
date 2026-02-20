@@ -258,6 +258,10 @@ export default function AdminDashboard() {
               <DollarSign className="w-4 h-4 mr-2" />
               Transactions
             </TabsTrigger>
+            <TabsTrigger value="withdrawals" data-testid="withdrawals-tab">
+              <DollarSign className="w-4 h-4 mr-2" />
+              Withdrawals
+            </TabsTrigger>
             <TabsTrigger value="tasks" data-testid="tasks-tab">
               <ListTodo className="w-4 h-4 mr-2" />
               Tasks
