@@ -671,6 +671,58 @@ async def get_my_withdrawals(payload: dict = Depends(verify_token)):
     ).sort('created_at', -1).to_list(None)
     return {'withdrawals': withdrawals}
 
+@api_router.get('/notifications/mine')
+async def get_my_notifications(payload: dict = Depends(verify_token)):
+    if payload['role'] == 'admin':
+        raise HTTPException(status_code=403, detail='Admin cannot view user notifications')
+    
+    notifications = await db.notifications.find(
+        {'$or': [
+            {'user_id': payload['user_id']},
+            {'user_id': None}
+        ]},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    
+    return {'notifications': notifications}
+
+@api_router.get('/notifications/unread-count')
+async def get_unread_count(payload: dict = Depends(verify_token)):
+    if payload['role'] == 'admin':
+        return {'unread_count': 0}
+    
+    count = await db.notifications.count_documents({
+        '$or': [
+            {'user_id': payload['user_id'], 'is_read': False},
+            {'user_id': None, 'is_read': False}
+        ]
+    })
+    
+    return {'unread_count': count}
+
+@api_router.post('/notifications/mark-read')
+async def mark_notification_read(data: NotificationRead, payload: dict = Depends(verify_token)):
+    if payload['role'] == 'admin':
+        raise HTTPException(status_code=403, detail='Admin cannot mark notifications as read')
+    
+    notification = await db.notifications.find_one({'id': data.notification_id}, {'_id': 0})
+    if not notification:
+        raise HTTPException(status_code=404, detail='Notification not found')
+    
+    if notification.get('user_id') and notification['user_id'] != payload['user_id']:
+        raise HTTPException(status_code=403, detail='Cannot mark other user notifications as read')
+    
+    if 'read_by' not in notification:
+        notification['read_by'] = []
+    
+    if payload['user_id'] not in notification['read_by']:
+        await db.notifications.update_one(
+            {'id': data.notification_id},
+            {'$addToSet': {'read_by': payload['user_id']}}
+        )
+    
+    return {'message': 'Notification marked as read'}
+
 @api_router.get('/admin/users')
 async def get_all_users(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
