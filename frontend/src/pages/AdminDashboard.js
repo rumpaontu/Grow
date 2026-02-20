@@ -195,6 +195,35 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleWithdrawalAction = async (withdrawalId, action) => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        `${API}/admin/withdrawals/action`,
+        { withdrawal_id: withdrawalId, action },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Withdrawal ${action}d successfully`);
+      fetchAdminData();
+    } catch (error) {
+      toast.error(`Failed to ${action} withdrawal`);
+    }
+  };
+
+  const handleUpdateMinWithdrawal = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        `${API}/admin/settings/min-withdrawal`,
+        { min_withdrawal_amount: parseFloat(minWithdrawal) },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Minimum withdrawal amount updated successfully');
+    } catch (error) {
+      toast.error('Failed to update minimum withdrawal amount');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-dark-obsidian">
       {/* Header */}
