@@ -439,6 +439,174 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Referral Earnings & Bonuses */}
+        {referralEarnings && (
+          <div className="glass-effect p-6">
+            <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">💰 Referral Earnings & Bonuses</h2>
+            
+            {/* Total Earnings Summary */}
+            <div className="bg-gradient-to-r from-gold/20 to-amber-600/20 border-2 border-gold/40 p-6 mb-6">
+              <p className="text-sm text-muted-foreground mb-2">Total Referral Earnings</p>
+              <h3 className="text-4xl font-bold text-gold font-montserrat">${referralEarnings.total_earned.toFixed(2)}</h3>
+            </div>
+
+            {/* Earnings Breakdown Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Instant Bonuses */}
+              <div className="bg-black/40 border border-white/10 p-5">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  ⚡ Instant Bonuses
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground text-sm">Level 1 (5%):</span>
+                    <span className="text-gold font-bold">${referralEarnings.instant_bonuses.level1.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground text-sm">Level 2 (2%):</span>
+                    <span className="text-gold font-bold">${referralEarnings.instant_bonuses.level2.toFixed(2)}</span>
+                  </div>
+                  <div className="border-t border-white/10 pt-2 mt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white font-semibold">Total:</span>
+                      <span className="text-gold font-bold text-lg">${referralEarnings.instant_bonuses.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Daily Bonuses */}
+              <div className="bg-black/40 border border-white/10 p-5">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  📅 Daily Recurring Bonuses
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground text-sm">Level 1 (5%):</span>
+                    <span className="text-green-500 font-bold">${referralEarnings.daily_bonuses.level1.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground text-sm">Level 2 (2%):</span>
+                    <span className="text-green-500 font-bold">${referralEarnings.daily_bonuses.level2.toFixed(2)}</span>
+                  </div>
+                  <div className="border-t border-white/10 pt-2 mt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white font-semibold">Total:</span>
+                      <span className="text-green-500 font-bold text-lg">${referralEarnings.daily_bonuses.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Milestone Bonus */}
+              <div className="bg-black/40 border border-white/10 p-5">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  🎯 Milestone Bonus
+                  {referralEarnings.milestone.unlocked && <Badge className="bg-green-500 text-white">Unlocked!</Badge>}
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground text-sm">Target:</span>
+                    <span className="text-white font-semibold">20 Active Referrals</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground text-sm">Progress:</span>
+                    <span className="text-white font-semibold">{referralEarnings.milestone.progress} / {referralEarnings.milestone.target}</span>
+                  </div>
+                  <Progress value={(referralEarnings.milestone.progress / referralEarnings.milestone.target) * 100} className="h-3" />
+                  <div className="border-t border-white/10 pt-2 mt-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white font-semibold">Earned:</span>
+                      <span className="text-gold font-bold text-lg">${referralEarnings.milestone.earned.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Loan & Special Bonuses */}
+              <div className="bg-black/40 border border-white/10 p-5">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  🏦 Loan & Special Bonuses
+                </h3>
+                <div className="space-y-3">
+                  {/* Small Package Loan */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-muted-foreground text-sm">$100 Loan (10 small pkgs by refs):</span>
+                      {referralEarnings.loans.small.unlocked && <Badge className="bg-blue-500 text-white">Unlocked</Badge>}
+                    </div>
+                    <Progress value={(referralEarnings.loans.small.progress / referralEarnings.loans.small.target) * 100} className="h-2 mb-1" />
+                    <p className="text-xs text-muted-foreground">{referralEarnings.loans.small.progress}/{referralEarnings.loans.small.target} packages</p>
+                  </div>
+                  
+                  {/* Big Package Bonus */}
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-muted-foreground text-sm">$500 Bonus (10 big pkgs by refs):</span>
+                      {referralEarnings.loans.big.unlocked && <Badge className="bg-green-500 text-white">Unlocked</Badge>}
+                    </div>
+                    <Progress value={(referralEarnings.loans.big.progress / referralEarnings.loans.big.target) * 100} className="h-2 mb-1" />
+                    <p className="text-xs text-muted-foreground">{referralEarnings.loans.big.progress}/{referralEarnings.loans.big.target} packages</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Loan Repayment Section */}
+            {referralEarnings.loan_balance > 0 && (
+              <div className="bg-red-900/20 border-2 border-red-500/40 p-5 mt-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-red-400 mb-1">⚠️ Outstanding Loan</h3>
+                    <p className="text-sm text-muted-foreground">You have an active loan that needs to be repaid</p>
+                  </div>
+                  <p className="text-2xl font-bold text-red-400">${referralEarnings.loan_balance.toFixed(2)}</p>
+                </div>
+                <Dialog open={showLoanRepayDialog} onOpenChange={setShowLoanRepayDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full bg-red-500 text-white hover:bg-red-600">
+                      Repay Loan
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-[#1A1A1A] border-white/10">
+                    <DialogHeader>
+                      <DialogTitle className="text-gold font-montserrat text-2xl">Repay Loan</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-6 mt-4">
+                      <div className="bg-red-900/20 border border-red-500/40 p-4">
+                        <p className="text-sm text-muted-foreground mb-1">Outstanding Loan Balance</p>
+                        <p className="text-2xl font-bold text-red-400">${referralEarnings.loan_balance.toFixed(2)}</p>
+                      </div>
+                      <div className="bg-black/40 border border-white/10 p-4">
+                        <p className="text-sm text-muted-foreground mb-1">Your Available Balance</p>
+                        <p className="text-2xl font-bold text-gold">${user?.balance?.toFixed(2) || '0.00'}</p>
+                      </div>
+                      <div>
+                        <Label htmlFor="loan_repay_amount" className="text-white">Repayment Amount ($)</Label>
+                        <Input
+                          id="loan_repay_amount"
+                          type="number"
+                          value={loanRepayAmount}
+                          onChange={(e) => setLoanRepayAmount(e.target.value)}
+                          className="bg-black/50 border-white/10 text-white mt-2"
+                          placeholder="Enter amount to repay"
+                          max={referralEarnings.loan_balance}
+                        />
+                      </div>
+                      <Button
+                        onClick={handleLoanRepayment}
+                        className="w-full bg-red-500 text-white hover:bg-red-600 py-6"
+                      >
+                        Confirm Repayment
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Daily Tasks */}
         <div className="glass-effect p-6">
           <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">Daily Tasks</h2>
