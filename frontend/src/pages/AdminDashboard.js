@@ -495,6 +495,10 @@ export default function AdminDashboard() {
               <Image className="w-4 h-4 mr-2" />
               Manage Ads
             </TabsTrigger>
+            <TabsTrigger value="bonuses" data-testid="bonuses-tab">
+              <Award className="w-4 h-4 mr-2" />
+              Bonuses
+            </TabsTrigger>
           </TabsList>
 
           {/* Users Tab */}
