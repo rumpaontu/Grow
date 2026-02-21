@@ -37,6 +37,10 @@ export default function Dashboard() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [referralEarnings, setReferralEarnings] = useState(null);
+  const [showReferralTree, setShowReferralTree] = useState(false);
+  const [loanRepayAmount, setLoanRepayAmount] = useState('');
+  const [showLoanRepayDialog, setShowLoanRepayDialog] = useState(false);
 
 
   useEffect(() => {
