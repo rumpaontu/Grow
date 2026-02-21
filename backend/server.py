@@ -794,7 +794,7 @@ async def get_referral_earnings(payload: dict = Depends(verify_token)):
     loan_big = sum(t['amount'] for t in transactions if t['type'] == 'loan_bonus_10_big')
     
     # Get milestone progress (active referrals only)
-    level1_refs = await db.users.find({'referred_by': user.get('referral_code')}, {'_id': 0, 'id': 1}).to_list(None)
+    level1_refs = await db.users.find({'referred_by': user.get('referral_code')}, {'_id': 0, 'id': 1}).to_list(1000)
     active_level1_count = 0
     for ref in level1_refs:
         package_count = await db.packages.count_documents({'user_id': ref['id']})
