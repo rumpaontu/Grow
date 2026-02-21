@@ -30,6 +30,14 @@ export default function AdminDashboard() {
   const [minWithdrawal, setMinWithdrawal] = useState(5);
   const [notifications, setNotifications] = useState([]);
   const [newNotification, setNewNotification] = useState({ title: '', message: '', user_id: '' });
+  const [showBalanceEditDialog, setShowBalanceEditDialog] = useState(false);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState(null);
+  const [newBalance, setNewBalance] = useState('');
+  const [balanceReason, setBalanceReason] = useState('');
+  const [showBanDialog, setShowBanDialog] = useState(false);
+  const [selectedUserForBan, setSelectedUserForBan] = useState(null);
+  const [banDuration, setBanDuration] = useState(3);
+  const [adminLogs, setAdminLogs] = useState([]);
 
   useEffect(() => {
     fetchAdminData();
