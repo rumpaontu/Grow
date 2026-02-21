@@ -105,6 +105,13 @@ class NotificationRead(BaseModel):
 class LoanRepayment(BaseModel):
     amount: float
 
+class BalanceEdit(BaseModel):
+    new_balance: float
+    reason: str
+
+class UserBan(BaseModel):
+    duration_days: int  # 3, 7, 15, or 30
+
 def create_token(user_id: str, email: str, role: str) -> str:
     payload = {
         'user_id': user_id,
