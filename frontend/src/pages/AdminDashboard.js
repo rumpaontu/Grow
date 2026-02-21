@@ -479,26 +479,143 @@ export default function AdminDashboard() {
                       <p className="text-white font-semibold">{user.full_name}</p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
                       <div className="flex gap-4 mt-2 text-sm">
-                        <span className="text-muted-foreground">Balance: <span className="text-gold">${user.balance?.toFixed(2)}</span></span>
+                        <span className="text-muted-foreground">Balance: <span className="text-gold">${user.balance?.toFixed(2) || '0.00'}</span></span>
                         <span className="text-muted-foreground">KYC: <span className={user.kyc_status === 'approved' ? 'text-green-500' : 'text-yellow-500'}>{user.kyc_status}</span></span>
-                        <span className="text-muted-foreground">Status: <span className={user.banned ? 'text-red-500' : 'text-green-500'}>{user.banned ? 'Banned' : 'Active'}</span></span>
+                        {user.banned && user.banned_until && (
+                          <span className="text-red-500 text-xs">Banned until: {new Date(user.banned_until).toLocaleDateString()}</span>
+                        )}
                       </div>
+                      {user.banned ? (
+                        <Badge className="mt-2 bg-red-500 text-white">🚫 BANNED</Badge>
+                      ) : (
+                        <Badge className="mt-2 bg-green-500 text-white">✓ ACTIVE</Badge>
+                      )}
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        data-testid={`ban-user-${user.id}-btn`}
-                        onClick={() => handleUpdateUser(user.id, { banned: !user.banned })}
+                        onClick={() => {
+                          setSelectedUserForEdit(user);
+                          setNewBalance(user.balance?.toString() || '0');
+                          setShowBalanceEditDialog(true);
+                        }}
                         variant="outline"
-                        className={user.banned ? 'border-green-500/30 text-green-500' : 'border-red-500/30 text-red-500'}
+                        className="border-gold/30 text-gold hover:bg-gold/10"
                       >
-                        {user.banned ? 'Unban' : 'Ban'}
+                        Edit Balance
                       </Button>
+                      {user.banned ? (
+                        <Button
+                          onClick={() => handleUnbanUser(user.id)}
+                          variant="outline"
+                          className="border-green-500/30 text-green-500 hover:bg-green-500/10"
+                        >
+                          Unban User
+                        </Button>
+                      ) : (
+                        <Button
+                          onClick={() => {
+                            setSelectedUserForBan(user);
+                            setShowBanDialog(true);
+                          }}
+                          variant="outline"
+                          className="border-red-500/30 text-red-500 hover:bg-red-500/10"
+                        >
+                          Ban User
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           </TabsContent>
+
+          {/* Balance Edit Dialog */}
+          <Dialog open={showBalanceEditDialog} onOpenChange={setShowBalanceEditDialog}>
+            <DialogContent className="bg-[#1A1A1A] border-white/10">
+              <DialogHeader>
+                <DialogTitle className="text-gold font-montserrat text-2xl">Edit User Balance</DialogTitle>
+              </DialogHeader>
+              {selectedUserForEdit && (
+                <div className="space-y-4 mt-4">
+                  <div className="bg-black/40 border border-white/10 p-4">
+                    <p className="text-white font-semibold">{selectedUserForEdit.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{selectedUserForEdit.email}</p>
+                    <p className="text-sm mt-2">Current Balance: <span className="text-gold font-bold">${selectedUserForEdit.balance?.toFixed(2) || '0.00'}</span></p>
+                  </div>
+                  <div>
+                    <Label htmlFor="new_balance" className="text-white">New Balance ($)</Label>
+                    <Input
+                      id="new_balance"
+                      type="number"
+                      step="0.01"
+                      value={newBalance}
+                      onChange={(e) => setNewBalance(e.target.value)}
+                      className="bg-black/50 border-white/10 text-white mt-2"
+                      placeholder="Enter new balance"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="balance_reason" className="text-white">Reason (Required)</Label>
+                    <Input
+                      id="balance_reason"
+                      value={balanceReason}
+                      onChange={(e) => setBalanceReason(e.target.value)}
+                      className="bg-black/50 border-white/10 text-white mt-2"
+                      placeholder="e.g., Manual adjustment, Bonus, Refund"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleEditBalance}
+                    className="w-full bg-gold text-black hover:bg-accent font-semibold py-6"
+                  >
+                    Update Balance
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Ban User Dialog */}
+          <Dialog open={showBanDialog} onOpenChange={setShowBanDialog}>
+            <DialogContent className="bg-[#1A1A1A] border-white/10">
+              <DialogHeader>
+                <DialogTitle className="text-red-500 font-montserrat text-2xl">Ban User</DialogTitle>
+              </DialogHeader>
+              {selectedUserForBan && (
+                <div className="space-y-4 mt-4">
+                  <div className="bg-red-900/20 border border-red-500/40 p-4">
+                    <p className="text-white font-semibold">{selectedUserForBan.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{selectedUserForBan.email}</p>
+                    <p className="text-sm text-red-400 mt-2">⚠️ User can login but cannot complete tasks or claim rewards during ban period.</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="ban_duration" className="text-white">Ban Duration</Label>
+                    <select
+                      id="ban_duration"
+                      value={banDuration}
+                      onChange={(e) => setBanDuration(Number(e.target.value))}
+                      className="w-full bg-black/50 border border-white/10 text-white mt-2 p-3 rounded-md"
+                    >
+                      <option value={3}>3 Days</option>
+                      <option value={7}>7 Days</option>
+                      <option value={15}>15 Days</option>
+                      <option value={30}>1 Month (30 Days)</option>
+                    </select>
+                  </div>
+                  <div className="bg-yellow-900/20 border border-yellow-500/40 p-3 text-sm text-yellow-200">
+                    <p>⚠️ During ban: Package days will continue to decrease (penalty)</p>
+                  </div>
+                  <Button
+                    onClick={handleBanUser}
+                    className="w-full bg-red-500 text-white hover:bg-red-600 font-semibold py-6"
+                  >
+                    Confirm Ban for {banDuration} Days
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* KYC Tab */}
           <TabsContent value="kyc" className="glass-effect p-6">
