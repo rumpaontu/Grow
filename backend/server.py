@@ -501,7 +501,7 @@ async def purchase_package(data: PackagePurchase, payload: dict = Depends(verify
 
 @api_router.get('/packages/mine')
 async def get_my_packages(payload: dict = Depends(verify_token)):
-    packages = await db.packages.find({'user_id': payload['user_id']}, {'_id': 0}).to_list(None)
+    packages = await db.packages.find({'user_id': payload['user_id']}, {'_id': 0}).to_list(100)
     return {'packages': packages}
 
 @api_router.get('/tasks/daily')
@@ -920,7 +920,7 @@ async def submit_deposit(data: PackagePurchase, payload: dict = Depends(verify_t
 
 @api_router.get('/transactions/history')
 async def get_transaction_history(payload: dict = Depends(verify_token)):
-    transactions = await db.transactions.find({'user_id': payload['user_id']}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    transactions = await db.transactions.find({'user_id': payload['user_id']}, {'_id': 0}).sort('created_at', -1).to_list(100)
     return {'transactions': transactions}
 
 @api_router.post('/sponsor/inquiry')
@@ -1084,7 +1084,7 @@ async def get_all_users(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
         raise HTTPException(status_code=403, detail='Admin access required')
     
-    users = await db.users.find({}, {'_id': 0, 'password': 0}).to_list(None)
+    users = await db.users.find({}, {'_id': 0, 'password': 0}).to_list(1000)
     return {'users': users}
 
 @api_router.post('/admin/users/{user_id}/update')
