@@ -513,7 +513,113 @@ async def complete_task(data: TaskComplete, payload: dict = Depends(verify_token
         'task_id': data.task_id
     }
 
-@api_router.get('/referrals/tree')
+@api_router.post('/tasks/claim-daily-income')
+async def claim_daily_income(payload: dict = Depends(verify_token)):
+    if payload['role'] == 'admin':
+        raise HTTPException(status_code=403, detail='Admin cannot claim daily income')
+    
+    today = datetime.now(timezone.utc).date().isoformat()
+    
+    # Check if user has already claimed today
+    existing_claim = await db.daily_income_claims.find_one({
+        'user_id': payload['user_id'],
+        'date': today
+    })
+    
+    if existing_claim:
+        raise HTTPException(status_code=400, detail='Daily income already claimed today')
+    
+    # Get all tasks
+    all_tasks = await db.tasks.find({}, {'_id': 0, 'id': 1}).to_list(None)
+    
+    if not all_tasks:
+        raise HTTPException(status_code=400, detail='No tasks available')
+    
+    # Check if ALL tasks are completed today
+    completed_tasks = await db.task_completions.find({
+        'user_id': payload['user_id'],
+        'date': today
+    }, {'_id': 0}).to_list(None)
+    
+    completed_task_ids = [tc['task_id'] for tc in completed_tasks]
+    all_task_ids = [t['id'] for t in all_tasks]
+    
+    if not all(task_id in completed_task_ids for task_id in all_task_ids):
+        raise HTTPException(status_code=400, detail='You must complete all tasks before claiming daily income')
+    
+    # Get active packages and calculate total daily income
+    active_packages = await db.packages.find({
+        'user_id': payload['user_id'],
+        'is_active': True,
+        'days_remaining': {'$gt': 0}
+    }).to_list(None)
+    
+    if not active_packages:
+        raise HTTPException(status_code=400, detail='No active packages found')
+    
+    total_daily_income = 0
+    for package in active_packages:
+        total_daily_income += package['daily_income']
+        
+        # Decrement days remaining
+        await db.packages.update_one(
+            {'id': package['id']},
+            {'$inc': {'days_remaining': -1}}
+        )
+        
+        # Mark as inactive if completed
+        if package['days_remaining'] - 1 <= 0:
+            await db.packages.update_one(
+                {'id': package['id']},
+                {'$set': {'is_active': False}}
+            )
+    
+    # Add income to user balance
+    await db.users.update_one(
+        {'id': payload['user_id']},
+        {'$inc': {'balance': total_daily_income}}
+    )
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        'id': str(uuid.uuid4()),
+        'user_id': payload['user_id'],
+        'type': 'daily_income',
+        'amount': total_daily_income,
+        'status': 'completed',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Record claim to prevent double claiming
+    await db.daily_income_claims.insert_one({
+        'id': str(uuid.uuid4()),
+        'user_id': payload['user_id'],
+        'date': today,
+        'amount': total_daily_income,
+        'claimed_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Award referral bonuses
+    await calculate_referral_bonuses(payload['user_id'], total_daily_income, 'daily')
+    
+    # Send notification
+    await db.notifications.insert_one({
+        'id': str(uuid.uuid4()),
+        'title': 'Daily Income Claimed!',
+        'message': f'Congratulations! You earned ${total_daily_income:.2f} for completing all daily tasks. Keep up the great work!',
+        'user_id': payload['user_id'],
+        'is_read': False,
+        'read_by': [],
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        'message': 'Daily income claimed successfully!',
+        'amount': total_daily_income,
+        'new_balance': (await db.users.find_one({'id': payload['user_id']}, {'_id': 0}))['balance']
+    }
+
+@api_router.get('/tasks/claim-status')
 async def get_referral_tree(payload: dict = Depends(verify_token)):
     user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
     if not user:
