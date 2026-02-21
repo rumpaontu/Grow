@@ -180,7 +180,7 @@ class TaskClaimSystemTester:
     def get_transactions(self, user_token):
         """Get user transactions"""
         headers = {'Authorization': f'Bearer {user_token}'}
-        response = self.session.get(f"{BACKEND_URL}/transactions", headers=headers)
+        response = self.session.get(f"{BACKEND_URL}/transactions/history", headers=headers)
         
         if response.status_code == 200:
             return response.json()
