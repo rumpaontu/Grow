@@ -21,6 +21,7 @@ export default function SignupPage() {
     referral_code: searchParams.get('ref') || ''
   });
   const [loading, setLoading] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleSignup = async (e) => {
     e.preventDefault();
