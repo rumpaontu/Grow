@@ -136,7 +136,7 @@ class TaskClaimSystemTester:
             response = self.session.post(f"{BACKEND_URL}/admin/tasks/create", 
                                        json=task_data, headers=headers)
             
-            if response.status_code != 201:
+            if response.status_code != 200:
                 print(f"❌ Task {i} creation failed: {response.status_code} - {response.text}")
                 continue
                 
