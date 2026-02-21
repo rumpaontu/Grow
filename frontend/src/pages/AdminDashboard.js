@@ -1036,6 +1036,203 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
+          {/* Manage Ads Tab */}
+          <TabsContent value="ads" className="glass-effect p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gold font-montserrat">Manage Banner Ads</h2>
+              <Dialog open={showBannerDialog} onOpenChange={setShowBannerDialog}>
+                <DialogTrigger asChild>
+                  <Button className="bg-gold text-black hover:bg-accent">
+                    <Image className="w-4 h-4 mr-2" />
+                    Create New Banner
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-[#1A1A1A] border-white/10 max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-gold font-montserrat text-2xl">Create Banner Ad</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <Label htmlFor="banner_title" className="text-white">Banner Title</Label>
+                      <Input
+                        id="banner_title"
+                        value={newBanner.title}
+                        onChange={(e) => setNewBanner({ ...newBanner, title: e.target.value })}
+                        className="bg-black/50 border-white/10 text-white mt-2"
+                        placeholder="e.g., Special Promotion"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="banner_url" className="text-white">Target URL</Label>
+                      <Input
+                        id="banner_url"
+                        value={newBanner.target_url}
+                        onChange={(e) => setNewBanner({ ...newBanner, target_url: e.target.value })}
+                        className="bg-black/50 border-white/10 text-white mt-2"
+                        placeholder="https://example.com"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="banner_image" className="text-white">Upload Banner Image</Label>
+                      <Input
+                        id="banner_image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="bg-black/50 border-white/10 text-white mt-2"
+                      />
+                      {newBanner.image_base64 && (
+                        <div className="mt-4">
+                          <p className="text-sm text-muted-foreground mb-2">Preview:</p>
+                          <img src={newBanner.image_base64} alt="Preview" className="w-full h-48 object-cover rounded-md" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="banner_active"
+                        checked={newBanner.active}
+                        onChange={(e) => setNewBanner({ ...newBanner, active: e.target.checked })}
+                        className="w-4 h-4"
+                      />
+                      <Label htmlFor="banner_active" className="text-white">Active (Show to users)</Label>
+                    </div>
+                    <Button
+                      onClick={handleCreateBanner}
+                      className="w-full bg-gold text-black hover:bg-accent font-semibold py-6"
+                    >
+                      Create Banner Ad
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="space-y-4">
+              {bannerAds.map((banner) => (
+                <div key={banner.id} className="bg-black/40 border border-white/10 p-4">
+                  <div className="flex gap-4">
+                    <div className="w-48 h-32 flex-shrink-0">
+                      <img src={banner.image_base64} alt={banner.title} className="w-full h-full object-cover rounded-md" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-white font-semibold text-lg">{banner.title}</h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            <a href={banner.target_url} target="_blank" rel="noopener noreferrer" className="text-gold hover:underline">
+                              {banner.target_url}
+                            </a>
+                          </p>
+                          <div className="flex gap-4 mt-2 text-sm">
+                            <span className="text-muted-foreground">
+                              Status: {banner.active ? (
+                                <Badge className="bg-green-500 text-white ml-1">Active</Badge>
+                              ) : (
+                                <Badge className="bg-gray-500 text-white ml-1">Inactive</Badge>
+                              )}
+                            </span>
+                            <span className="text-muted-foreground">Clicks: <span className="text-gold font-bold">{banner.clicks || 0}</span></span>
+                            <span className="text-xs text-muted-foreground">Created: {new Date(banner.created_at).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                onClick={() => setEditingBanner(banner)}
+                                variant="outline"
+                                className="border-gold/30 text-gold hover:bg-gold/10"
+                              >
+                                Edit
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="bg-[#1A1A1A] border-white/10 max-w-2xl">
+                              <DialogHeader>
+                                <DialogTitle className="text-gold font-montserrat text-2xl">Edit Banner Ad</DialogTitle>
+                              </DialogHeader>
+                              {editingBanner && (
+                                <div className="space-y-4 mt-4">
+                                  <div>
+                                    <Label htmlFor="edit_banner_title" className="text-white">Banner Title</Label>
+                                    <Input
+                                      id="edit_banner_title"
+                                      value={editingBanner.title}
+                                      onChange={(e) => setEditingBanner({ ...editingBanner, title: e.target.value })}
+                                      className="bg-black/50 border-white/10 text-white mt-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="edit_banner_url" className="text-white">Target URL</Label>
+                                    <Input
+                                      id="edit_banner_url"
+                                      value={editingBanner.target_url}
+                                      onChange={(e) => setEditingBanner({ ...editingBanner, target_url: e.target.value })}
+                                      className="bg-black/50 border-white/10 text-white mt-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor="edit_banner_image" className="text-white">Replace Image (Optional)</Label>
+                                    <Input
+                                      id="edit_banner_image"
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={handleImageUpload}
+                                      className="bg-black/50 border-white/10 text-white mt-2"
+                                    />
+                                    <div className="mt-4">
+                                      <p className="text-sm text-muted-foreground mb-2">Current Image:</p>
+                                      <img src={editingBanner.image_base64} alt="Current" className="w-full h-48 object-cover rounded-md" />
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="checkbox"
+                                      id="edit_banner_active"
+                                      checked={editingBanner.active}
+                                      onChange={(e) => setEditingBanner({ ...editingBanner, active: e.target.checked })}
+                                      className="w-4 h-4"
+                                    />
+                                    <Label htmlFor="edit_banner_active" className="text-white">Active (Show to users)</Label>
+                                  </div>
+                                  <Button
+                                    onClick={handleUpdateBanner}
+                                    className="w-full bg-gold text-black hover:bg-accent font-semibold py-6"
+                                  >
+                                    Update Banner Ad
+                                  </Button>
+                                </div>
+                              )}
+                            </DialogContent>
+                          </Dialog>
+                          <Button
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to delete this banner ad?')) {
+                                handleDeleteBanner(banner.id);
+                              }
+                            }}
+                            variant="outline"
+                            className="border-red-500/30 text-red-500 hover:bg-red-500/10"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {bannerAds.length === 0 && (
+                <div className="text-center py-12">
+                  <Image className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No banner ads created yet</p>
+                  <p className="text-sm text-muted-foreground mt-2">Create your first banner ad to display promotions on user dashboard</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
         </Tabs>
       </div>
 
