@@ -621,27 +621,65 @@ async def claim_daily_income(payload: dict = Depends(verify_token)):
     }
 
 @api_router.get('/tasks/claim-status')
-async def get_referral_tree(payload: dict = Depends(verify_token)):
-    user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
-    if not user:
-        raise HTTPException(status_code=404, detail='User not found')
+async def get_claim_status(payload: dict = Depends(verify_token)):
+    if payload['role'] == 'admin':
+        raise HTTPException(status_code=403, detail='Admin cannot claim daily income')
     
-    level1_refs = await db.users.find(
-        {'referred_by': user['referral_code']},
-        {'_id': 0, 'id': 1, 'full_name': 1, 'email': 1, 'balance': 1, 'created_at': 1, 'referral_code': 1}
-    ).to_list(None)
+    today = datetime.now(timezone.utc).date().isoformat()
     
-    level2_refs = []
-    for l1_ref in level1_refs:
-        l2_refs = await db.users.find(
-            {'referred_by': l1_ref['referral_code']},
-            {'_id': 0, 'id': 1, 'full_name': 1, 'email': 1, 'balance': 1, 'created_at': 1}
-        ).to_list(None)
-        level2_refs.extend(l2_refs)
+    # Check if user has already claimed today
+    existing_claim = await db.daily_income_claims.find_one({
+        'user_id': payload['user_id'],
+        'date': today
+    })
+    
+    # Get all tasks
+    all_tasks = await db.tasks.find({}, {'_id': 0, 'id': 1, 'title': 1}).to_list(None)
+    
+    if not all_tasks:
+        return {
+            'can_claim': False,
+            'tasks_completed': 0,
+            'total_tasks': 0,
+            'all_tasks_completed': False,
+            'already_claimed': bool(existing_claim),
+            'message': 'No tasks available'
+        }
+    
+    # Check completed tasks today
+    completed_tasks = await db.task_completions.find({
+        'user_id': payload['user_id'],
+        'date': today
+    }, {'_id': 0}).to_list(None)
+    
+    completed_task_ids = [tc['task_id'] for tc in completed_tasks]
+    all_task_ids = [t['id'] for t in all_tasks]
+    
+    tasks_completed = len(completed_task_ids)
+    total_tasks = len(all_task_ids)
+    all_tasks_completed = all(task_id in completed_task_ids for task_id in all_task_ids)
+    
+    # Check if user has active packages
+    active_packages = await db.packages.find({
+        'user_id': payload['user_id'],
+        'is_active': True,
+        'days_remaining': {'$gt': 0}
+    }).to_list(None)
+    
+    can_claim = (
+        all_tasks_completed and 
+        not existing_claim and 
+        len(active_packages) > 0
+    )
     
     return {
-        'level1': level1_refs,
-        'level2': level2_refs
+        'can_claim': can_claim,
+        'tasks_completed': tasks_completed,
+        'total_tasks': total_tasks,
+        'all_tasks_completed': all_tasks_completed,
+        'already_claimed': bool(existing_claim),
+        'active_packages': len(active_packages),
+        'message': 'Ready to claim' if can_claim else 'Not ready to claim'
     }
 
 @api_router.get('/referrals/stats')
