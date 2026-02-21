@@ -83,9 +83,14 @@ class TaskClaimSystemTester:
         print(f"💰 Creating ${amount} package purchase...")
         headers = {'Authorization': f'Bearer {user_token}'}
         
-        # First create the transaction
+        # Generate fake transaction ID and screenshot for testing
+        fake_transaction_id = f"TEST_TXN_{uuid.uuid4().hex[:8]}"
+        fake_screenshot = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+        
         response = self.session.post(f"{BACKEND_URL}/transactions/deposit", json={
-            "amount": amount
+            "amount": amount,
+            "transaction_id": fake_transaction_id,
+            "screenshot_base64": fake_screenshot
         }, headers=headers)
         
         if response.status_code not in [200, 201]:
