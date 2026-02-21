@@ -450,6 +450,40 @@ export default function Dashboard() {
           </motion.div>
         </div>
 
+        {/* Banner Ad Carousel */}
+        {bannerAds && bannerAds.length > 0 && (
+          <div className="glass-effect p-0 overflow-hidden">
+            <Carousel
+              autoPlay
+              infiniteLoop
+              interval={5000}
+              showThumbs={false}
+              showStatus={false}
+              showIndicators={bannerAds.length > 1}
+              className="banner-carousel"
+            >
+              {bannerAds.map((banner) => (
+                <div 
+                  key={banner.id}
+                  onClick={() => handleBannerClick(banner.id, banner.target_url)}
+                  className="cursor-pointer relative"
+                  style={{ height: '250px' }}
+                >
+                  <img
+                    src={banner.image_base64}
+                    alt={banner.title}
+                    className="w-full h-full object-cover"
+                    style={{ maxHeight: '250px' }}
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                    <p className="text-white font-semibold text-lg">{banner.title}</p>
+                  </div>
+                </div>
+              ))}
+            </Carousel>
+          </div>
+        )}
+
         {/* Referral Link */}
         <div className="glass-effect p-6">
           <h2 className="text-xl font-bold text-gold mb-4 font-montserrat">Your Referral Link</h2>
