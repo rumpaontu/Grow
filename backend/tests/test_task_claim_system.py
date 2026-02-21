@@ -68,8 +68,8 @@ class TaskClaimSystemTester:
         """Approve KYC for user (admin action)"""
         print(f"📋 Approving KYC for user {user_id}")
         headers = {'Authorization': f'Bearer {self.admin_token}'}
-        response = self.session.post(f"{BACKEND_URL}/admin/kyc/approve", 
-                                   json={"user_id": user_id}, headers=headers)
+        response = self.session.post(f"{BACKEND_URL}/admin/kyc/action", 
+                                   json={"user_id": user_id, "action": "approve"}, headers=headers)
         
         if response.status_code != 200:
             print(f"❌ KYC approval failed: {response.status_code} - {response.text}")
