@@ -102,6 +102,9 @@ class NotificationCreate(BaseModel):
 class NotificationRead(BaseModel):
     notification_id: str
 
+class LoanRepayment(BaseModel):
+    amount: float
+
 def create_token(user_id: str, email: str, role: str) -> str:
     payload = {
         'user_id': user_id,
