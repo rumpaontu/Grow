@@ -514,6 +514,10 @@ async def get_daily_tasks(payload: dict = Depends(verify_token)):
 
 @api_router.post('/tasks/complete')
 async def complete_task(data: TaskComplete, payload: dict = Depends(verify_token)):
+    # Check if user is banned
+    if await is_user_banned(payload['user_id']):
+        raise HTTPException(status_code=403, detail='Your account is temporarily banned. Tasks are disabled.')
+    
     task = await db.tasks.find_one({'id': data.task_id}, {'_id': 0})
     if not task:
         raise HTTPException(status_code=404, detail='Task not found')
