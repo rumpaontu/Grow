@@ -38,6 +38,10 @@ export default function AdminDashboard() {
   const [selectedUserForBan, setSelectedUserForBan] = useState(null);
   const [banDuration, setBanDuration] = useState(3);
   const [adminLogs, setAdminLogs] = useState([]);
+  const [bannerAds, setBannerAds] = useState([]);
+  const [showBannerDialog, setShowBannerDialog] = useState(false);
+  const [newBanner, setNewBanner] = useState({ title: '', target_url: '', image_base64: '', active: true });
+  const [editingBanner, setEditingBanner] = useState(null);
 
   useEffect(() => {
     fetchAdminData();
