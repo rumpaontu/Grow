@@ -166,15 +166,18 @@ backend:
 
   - task: "Special bonus - $500 for 10 big packages by referrals"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Awards $500 BONUS (not loan) after 10 big ($60) packages purchased by referrals. Adds to balance only. Includes notification."
+      - working: false
+        agent: "testing"
+        comment: "Same critical bug as loan system. Logic checks wrong user - should find referrer of package purchaser and award bonus to referrer, not purchaser. Tested with 10 big packages by referrals, no bonus awarded."
 
   - task: "Loan repayment endpoint"
     implemented: true
