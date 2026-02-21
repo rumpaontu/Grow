@@ -6,6 +6,8 @@ import SignupPage from '@/pages/SignupPage';
 import KYCPage from '@/pages/KYCPage';
 import Dashboard from '@/pages/Dashboard';
 import AdminDashboard from '@/pages/AdminDashboard';
+import TermsAndConditions from '@/pages/TermsAndConditions';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 
