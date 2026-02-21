@@ -553,6 +553,10 @@ async def claim_daily_income(payload: dict = Depends(verify_token)):
     if payload['role'] == 'admin':
         raise HTTPException(status_code=403, detail='Admin cannot claim daily income')
     
+    # Check if user is banned
+    if await is_user_banned(payload['user_id']):
+        raise HTTPException(status_code=403, detail='Your account is temporarily banned. Cannot claim income.')
+    
     today = datetime.now(timezone.utc).date().isoformat()
     
     # Check if user has already claimed today
