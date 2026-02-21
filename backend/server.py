@@ -402,9 +402,6 @@ async def login(data: UserLogin):
     if not bcrypt.checkpw(data.password.encode('utf-8'), user['password'].encode('utf-8')):
         raise HTTPException(status_code=401, detail='Invalid credentials')
     
-    if user.get('banned'):
-        raise HTTPException(status_code=403, detail='Account banned')
-    
     token = create_token(user['id'], user['email'], user['role'])
     
     return {
