@@ -133,15 +133,18 @@ backend:
 
   - task: "Daily recurring bonuses from task earnings (5% L1, 2% L2)"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "calculate_referral_bonuses() with 'daily' type is called in task completion endpoint at line 523. Awards 5% to L1 and 2% to L2 when referred user completes daily tasks."
+      - working: true
+        agent: "testing"
+        comment: "✅ Verified: Daily recurring bonuses work correctly. L1 referrer receives 5% of task earnings, L2 referrer receives 2%. Both bonuses awarded automatically when referred user completes daily tasks."
 
   - task: "Milestone bonus - $50 for 20 active L1 referrals"
     implemented: true
