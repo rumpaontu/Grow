@@ -462,6 +462,10 @@ export default function AdminDashboard() {
               <Bell className="w-4 h-4 mr-2" />
               Notifications
             </TabsTrigger>
+            <TabsTrigger value="ads" data-testid="ads-tab">
+              <Image className="w-4 h-4 mr-2" />
+              Manage Ads
+            </TabsTrigger>
           </TabsList>
 
           {/* Users Tab */}
