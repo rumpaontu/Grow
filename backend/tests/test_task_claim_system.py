@@ -115,31 +115,20 @@ class TaskClaimSystemTester:
         print("✅ Package approved")
         return True
         
-    def create_daily_tasks(self, count=3):
-        """Create daily tasks (admin action)"""
-        print(f"📋 Creating {count} daily tasks...")
+    def get_all_tasks(self):
+        """Get all existing tasks"""
+        print("📋 Getting all existing tasks...")
         headers = {'Authorization': f'Bearer {self.admin_token}'}
+        response = self.session.get(f"{BACKEND_URL}/admin/tasks", headers=headers)
         
-        task_ids = []
-        for i in range(1, count + 1):
-            task_data = {
-                "title": f"Daily Task {i}",
-                "url": f"https://example.com/task-{i}",  # Required field
-                "task_type": "daily"  # Required field (not "type")
-            }
+        if response.status_code != 200:
+            print(f"❌ Failed to get tasks: {response.status_code} - {response.text}")
+            return []
             
-            response = self.session.post(f"{BACKEND_URL}/admin/tasks/create", 
-                                       json=task_data, headers=headers)
-            
-            if response.status_code != 200:
-                print(f"❌ Task {i} creation failed: {response.status_code} - {response.text}")
-                continue
-                
-            task_response_data = response.json()
-            task_ids.append(task_response_data['task']['id'])
-            print(f"✅ Created task: {task_response_data['task']['title']}")
-            
-        return task_ids
+        data = response.json()
+        tasks = data.get('tasks', [])
+        print(f"✅ Found {len(tasks)} existing tasks")
+        return tasks
         
     def complete_task(self, user_token, task_id):
         """Complete a task"""
