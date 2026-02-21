@@ -59,7 +59,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      const [usersRes, kycRes, tasksRes, inquiriesRes, transRes, binanceRes, pendingWithdrawalsRes, allWithdrawalsRes, minWithdrawalRes, notificationsRes, logsRes, bannersRes] = await Promise.all([
+      const [usersRes, kycRes, tasksRes, inquiriesRes, transRes, binanceRes, pendingWithdrawalsRes, allWithdrawalsRes, minWithdrawalRes, notificationsRes, logsRes, bannersRes, bonusRes] = await Promise.all([
         axios.get(`${API}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/admin/kyc/pending`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/admin/tasks`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -71,7 +71,8 @@ export default function AdminDashboard() {
         axios.get(`${API}/settings/min-withdrawal`),
         axios.get(`${API}/admin/notifications/all`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/admin/logs`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API}/admin/banner-ads/all`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API}/admin/banner-ads/all`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/admin/bonus-settings`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       setUsers(usersRes.data.users);
