@@ -134,22 +134,33 @@ export default function Dashboard() {
   const completeTask = async (taskId) => {
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.post(
+      await axios.post(
         `${API}/tasks/complete`,
         { task_id: taskId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      if (response.data.daily_income_added > 0) {
-        toast.success(`Task completed! +$${response.data.daily_income_added.toFixed(2)} added to your balance!`);
-      } else {
-        toast.success('Task completed!');
-      }
+      toast.success('Task completed! Complete all tasks to claim your daily income.');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to complete task');
+    }
+  };
+
+  const claimDailyIncome = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.post(
+        `${API}/tasks/claim-daily-income`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       
+      toast.success(`Daily income claimed! +$${response.data.amount.toFixed(2)} added to your balance!`);
       fetchData();
       fetchNotifications();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to complete task');
+      toast.error(error.response?.data?.detail || 'Failed to claim daily income');
     }
   };
 
