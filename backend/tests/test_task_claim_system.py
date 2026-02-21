@@ -84,12 +84,11 @@ class TaskClaimSystemTester:
         headers = {'Authorization': f'Bearer {user_token}'}
         
         # First create the transaction
-        response = self.session.post(f"{BACKEND_URL}/transactions", json={
-            "type": "investment",
+        response = self.session.post(f"{BACKEND_URL}/transactions/deposit", json={
             "amount": amount
         }, headers=headers)
         
-        if response.status_code != 201:
+        if response.status_code not in [200, 201]:
             print(f"❌ Package purchase failed: {response.status_code} - {response.text}")
             return None
             
