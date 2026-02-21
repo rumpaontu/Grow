@@ -319,31 +319,6 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleCreateNotification = async () => {
-    if (!newNotification.title || !newNotification.message) {
-      toast.error('Please provide title and message');
-      return;
-    }
-
-    const token = localStorage.getItem('token');
-    try {
-      await axios.post(
-        `${API}/admin/notifications/create`,
-        {
-          title: newNotification.title,
-          message: newNotification.message,
-          user_id: newNotification.user_id || null
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success('Notification sent successfully');
-      setNewNotification({ title: '', message: '', user_id: '' });
-      fetchAdminData();
-    } catch (error) {
-      toast.error('Failed to send notification');
-    }
-  };
-
   const handleDeleteNotification = async (notificationId) => {
     const token = localStorage.getItem('token');
     try {
