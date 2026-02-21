@@ -325,6 +325,7 @@ async def signup(data: UserSignup):
         'referral_code': referral_code,
         'referred_by': data.referral_code,
         'balance': 0,
+        'loan_balance': 0,
         'kyc_status': 'pending',
         'kyc_id_card': None,
         'kyc_selfie': None,
