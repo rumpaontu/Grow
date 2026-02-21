@@ -25,6 +25,12 @@ export default function SignupPage() {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    
+    if (!agreedToTerms) {
+      toast.error('You must agree to the Terms & Conditions and Privacy Policy');
+      return;
+    }
+    
     setLoading(true);
     try {
       const response = await axios.post(`${API}/auth/signup`, formData);
