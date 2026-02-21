@@ -124,6 +124,11 @@ class BannerAdUpdate(BaseModel):
     active: Optional[bool] = None
     image_base64: Optional[str] = None
 
+class BonusSettingUpdate(BaseModel):
+    target: Optional[int] = None
+    amount: Optional[float] = None
+    enabled: Optional[bool] = None
+
 def create_token(user_id: str, email: str, role: str) -> str:
     payload = {
         'user_id': user_id,
