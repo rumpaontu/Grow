@@ -61,7 +61,7 @@ export default function Dashboard() {
     }
 
     try {
-      const [userRes, packagesRes, tasksRes, refStatsRes, refTreeRes, bannerRes, binanceRes, minWithdrawalRes, withdrawalsRes, notificationsRes, unreadCountRes] = await Promise.all([
+      const [userRes, packagesRes, tasksRes, refStatsRes, refTreeRes, bannerRes, binanceRes, minWithdrawalRes, withdrawalsRes, notificationsRes, unreadCountRes, refEarningsRes] = await Promise.all([
         axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/packages/mine`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/tasks/daily`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -72,7 +72,8 @@ export default function Dashboard() {
         axios.get(`${API}/settings/min-withdrawal`),
         axios.get(`${API}/withdrawals/mine`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/notifications/mine`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API}/notifications/unread-count`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API}/notifications/unread-count`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/referrals/earnings`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
 
       setUser(userRes.data);
@@ -86,6 +87,7 @@ export default function Dashboard() {
       setWithdrawals(withdrawalsRes.data.withdrawals);
       setNotifications(notificationsRes.data.notifications);
       setUnreadCount(unreadCountRes.data.unread_count);
+      setReferralEarnings(refEarningsRes.data);
 
       if (userRes.data.kyc_status === 'under_review') {
         toast.info('Your KYC is under review. Some features are limited.');
