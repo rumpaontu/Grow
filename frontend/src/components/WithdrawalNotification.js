@@ -41,6 +41,16 @@ const COUNTRIES = ['Bangladesh', 'India', 'USA'];
 const WithdrawalNotification = ({ isLoggedIn }) => {
   const [notification, setNotification] = useState(null);
   const [realWithdrawals, setRealWithdrawals] = useState([]);
+  const [showDebug, setShowDebug] = useState(false);
+
+  useEffect(() => {
+    console.log('WithdrawalNotification mounted. isLoggedIn:', isLoggedIn);
+    // Show debug info for 10 seconds
+    if (isLoggedIn) {
+      setShowDebug(true);
+      setTimeout(() => setShowDebug(false), 10000);
+    }
+  }, [isLoggedIn]);
 
   const getRandomName = () => {
     const region = COUNTRIES[Math.floor(Math.random() * COUNTRIES.length)].toLowerCase();
