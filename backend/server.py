@@ -198,9 +198,21 @@ async def calculate_referral_bonuses(user_id: str, amount: float, bonus_type: st
                 })
 
 async def check_milestone_bonuses(user_id: str):
-    level1_refs = await db.users.count_documents({'referred_by': await get_user_referral_code(user_id)})
+    user_ref_code = await get_user_referral_code(user_id)
+    if not user_ref_code:
+        return
     
-    if level1_refs >= 20:
+    # Get all level 1 referrals
+    level1_refs = await db.users.find({'referred_by': user_ref_code}, {'_id': 0, 'id': 1}).to_list(None)
+    
+    # Count only active referrals (those who have purchased at least 1 package)
+    active_count = 0
+    for ref in level1_refs:
+        package_count = await db.packages.count_documents({'user_id': ref['id']})
+        if package_count > 0:
+            active_count += 1
+    
+    if active_count >= 20:
         already_awarded = await db.transactions.find_one({
             'user_id': user_id,
             'type': 'milestone_bonus_20_refs'
@@ -217,6 +229,16 @@ async def check_milestone_bonuses(user_id: str):
                 'type': 'milestone_bonus_20_refs',
                 'amount': 50,
                 'status': 'completed',
+                'created_at': datetime.now(timezone.utc).isoformat()
+            })
+            
+            await db.notifications.insert_one({
+                'id': str(uuid.uuid4()),
+                'title': 'Milestone Bonus Unlocked!',
+                'message': f'Congratulations! You earned $50 bonus for reaching 20 active referrals!',
+                'user_id': user_id,
+                'is_read': False,
+                'read_by': [],
                 'created_at': datetime.now(timezone.utc).isoformat()
             })
 
