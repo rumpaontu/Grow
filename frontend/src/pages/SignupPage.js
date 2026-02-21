@@ -120,11 +120,34 @@ export default function SignupPage() {
             />
           </div>
 
+          {/* Terms and Conditions Checkbox */}
+          <div className="flex items-start gap-3 p-4 bg-gold/5 border border-gold/20 rounded-lg">
+            <input
+              type="checkbox"
+              id="terms_checkbox"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="mt-1 w-5 h-5 accent-gold cursor-pointer"
+              data-testid="terms-checkbox"
+            />
+            <label htmlFor="terms_checkbox" className="text-sm text-gray-300 cursor-pointer">
+              I agree to the{' '}
+              <Link to="/terms" target="_blank" className="text-gold hover:text-accent font-semibold underline">
+                Terms & Conditions
+              </Link>
+              {' '}and{' '}
+              <Link to="/privacy" target="_blank" className="text-gold hover:text-accent font-semibold underline">
+                Privacy Policy
+              </Link>
+              {' '}of GrowVault.
+            </label>
+          </div>
+
           <Button
             data-testid="signup-submit-btn"
             type="submit"
-            disabled={loading}
-            className="w-full bg-gold text-black hover:bg-accent font-semibold py-6 text-lg"
+            disabled={loading || !agreedToTerms}
+            className="w-full bg-gold text-black hover:bg-accent font-semibold py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Creating Account...' : (
               <>
