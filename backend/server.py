@@ -506,7 +506,7 @@ async def get_my_packages(payload: dict = Depends(verify_token)):
 
 @api_router.get('/tasks/daily')
 async def get_daily_tasks(payload: dict = Depends(verify_token)):
-    tasks = await db.tasks.find({}, {'_id': 0}).to_list(None)
+    tasks = await db.tasks.find({}, {'_id': 0}).to_list(50)
     
     today = datetime.now(timezone.utc).date().isoformat()
     completed_tasks = await db.task_completions.find({
@@ -1399,7 +1399,7 @@ async def get_all_tasks(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
         raise HTTPException(status_code=403, detail='Admin access required')
     
-    tasks = await db.tasks.find({}, {'_id': 0}).to_list(None)
+    tasks = await db.tasks.find({}, {'_id': 0}).to_list(50)
     return {'tasks': tasks}
 
 @api_router.post('/admin/tasks/create')
