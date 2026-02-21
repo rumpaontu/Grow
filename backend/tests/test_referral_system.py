@@ -303,7 +303,7 @@ class ReferralSystemTester:
         
         # For now, we'll check balance changes as a proxy for transaction verification
         # In a real implementation, we'd need a transactions endpoint for the user
-        current_balance = response['data']['user'].get('balance', 0.0)
+        current_balance = response['data'].get('balance', 0.0)
         
         if expected_amount and current_balance >= expected_amount:
             self.log_result(f"Verify Transaction {user.name}", True, f"Transaction likely exists (balance: ${current_balance})")
