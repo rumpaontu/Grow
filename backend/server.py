@@ -338,6 +338,7 @@ async def signup(data: UserSignup):
         'kyc_id_card': None,
         'kyc_selfie': None,
         'banned': False,
+        'banned_until': None,
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
