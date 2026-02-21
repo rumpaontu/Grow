@@ -225,6 +225,14 @@ async def calculate_referral_bonuses(user_id: str, amount: float, bonus_type: st
                 })
 
 async def check_milestone_bonuses(user_id: str):
+    # Get milestone settings
+    milestone_setting = await db.bonus_settings.find_one({'id': 'milestone_20_refs'}, {'_id': 0})
+    if not milestone_setting or not milestone_setting.get('enabled'):
+        return
+    
+    target = milestone_setting['target']
+    amount = milestone_setting['amount']
+    
     user_ref_code = await get_user_referral_code(user_id)
     if not user_ref_code:
         return
@@ -239,7 +247,7 @@ async def check_milestone_bonuses(user_id: str):
         if package_count > 0:
             active_count += 1
     
-    if active_count >= 20:
+    if active_count >= target:
         already_awarded = await db.transactions.find_one({
             'user_id': user_id,
             'type': 'milestone_bonus_20_refs'
@@ -248,13 +256,13 @@ async def check_milestone_bonuses(user_id: str):
         if not already_awarded:
             await db.users.update_one(
                 {'id': user_id},
-                {'$inc': {'balance': 50}}
+                {'$inc': {'balance': amount}}
             )
             await db.transactions.insert_one({
                 'id': str(uuid.uuid4()),
                 'user_id': user_id,
                 'type': 'milestone_bonus_20_refs',
-                'amount': 50,
+                'amount': amount,
                 'status': 'completed',
                 'created_at': datetime.now(timezone.utc).isoformat()
             })
@@ -262,7 +270,7 @@ async def check_milestone_bonuses(user_id: str):
             await db.notifications.insert_one({
                 'id': str(uuid.uuid4()),
                 'title': 'Milestone Bonus Unlocked!',
-                'message': 'Congratulations! You earned $50 bonus for reaching 20 active referrals!',
+                'message': f'Congratulations! You earned ${amount:.2f} bonus for reaching {target} active referrals!',
                 'user_id': user_id,
                 'is_read': False,
                 'read_by': [],
