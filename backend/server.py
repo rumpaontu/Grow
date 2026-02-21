@@ -444,8 +444,6 @@ async def purchase_package(data: PackagePurchase, payload: dict = Depends(verify
     if data.amount not in [25, 60]:
         raise HTTPException(status_code=400, detail='Invalid package amount')
     
-    daily_income = 1 if data.amount == 25 else 2.5
-    
     transaction_doc = {
         'id': str(uuid.uuid4()),
         'user_id': payload['user_id'],
