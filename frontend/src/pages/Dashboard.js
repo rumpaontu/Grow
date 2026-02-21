@@ -42,6 +42,7 @@ export default function Dashboard() {
   const [loanRepayAmount, setLoanRepayAmount] = useState('');
   const [showLoanRepayDialog, setShowLoanRepayDialog] = useState(false);
   const [claimStatus, setClaimStatus] = useState(null);
+  const [bannerAds, setBannerAds] = useState([]);
 
 
   useEffect(() => {
