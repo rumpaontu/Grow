@@ -47,25 +47,16 @@ class TaskClaimSystemTester:
         print(f"👤 Creating test user: {email}")
         response = self.session.post(f"{BACKEND_URL}/auth/signup", json=user_data)
         
-        if response.status_code != 201:
+        if response.status_code != 200:
             print(f"❌ User creation failed: {response.status_code} - {response.text}")
             return None
             
-        # Login to get token
-        login_response = self.session.post(f"{BACKEND_URL}/auth/login", json={
-            "email": email,
-            "password": "TestPassword123!"
-        })
-        
-        if login_response.status_code != 200:
-            print(f"❌ User login failed: {login_response.status_code} - {login_response.text}")
-            return None
-            
-        login_data = login_response.json()
+        # Signup returns token directly
+        signup_data = response.json()
         user_info = {
-            'user_id': login_data['user']['id'],
+            'user_id': signup_data['user']['id'],
             'email': email,
-            'token': login_data['token'],
+            'token': signup_data['token'],
             'full_name': user_data['full_name']
         }
         
