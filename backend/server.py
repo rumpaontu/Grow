@@ -1094,6 +1094,151 @@ async def update_user(user_id: str, data: UserUpdate, payload: dict = Depends(ve
     
     return {'message': 'User updated successfully'}
 
+@api_router.post('/admin/users/{user_id}/edit-balance')
+async def edit_user_balance(user_id: str, data: BalanceEdit, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    user = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    old_balance = user.get('balance', 0)
+    
+    # Update balance
+    await db.users.update_one(
+        {'id': user_id},
+        {'$set': {'balance': data.new_balance}}
+    )
+    
+    # Log the action
+    await db.admin_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'admin_id': payload['user_id'],
+        'admin_email': payload['email'],
+        'action': 'balance_edit',
+        'user_id': user_id,
+        'user_email': user.get('email'),
+        'old_value': old_balance,
+        'new_value': data.new_balance,
+        'reason': data.reason,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Send notification to user
+    await db.notifications.insert_one({
+        'id': str(uuid.uuid4()),
+        'title': 'Balance Updated by Admin',
+        'message': f'Your balance has been updated from ${old_balance:.2f} to ${data.new_balance:.2f}. Reason: {data.reason}',
+        'user_id': user_id,
+        'is_read': False,
+        'read_by': [],
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        'message': 'Balance updated successfully',
+        'old_balance': old_balance,
+        'new_balance': data.new_balance
+    }
+
+@api_router.post('/admin/users/{user_id}/ban')
+async def ban_user(user_id: str, data: UserBan, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    if data.duration_days not in [3, 7, 15, 30]:
+        raise HTTPException(status_code=400, detail='Invalid ban duration. Must be 3, 7, 15, or 30 days.')
+    
+    user = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    banned_until = datetime.now(timezone.utc) + timedelta(days=data.duration_days)
+    
+    # Ban user
+    await db.users.update_one(
+        {'id': user_id},
+        {'$set': {'banned': True, 'banned_until': banned_until.isoformat()}}
+    )
+    
+    # Log the action
+    await db.admin_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'admin_id': payload['user_id'],
+        'admin_email': payload['email'],
+        'action': 'user_ban',
+        'user_id': user_id,
+        'user_email': user.get('email'),
+        'duration_days': data.duration_days,
+        'banned_until': banned_until.isoformat(),
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Send notification to user
+    await db.notifications.insert_one({
+        'id': str(uuid.uuid4()),
+        'title': 'Account Temporarily Banned',
+        'message': f'Your account has been temporarily banned for {data.duration_days} days. You can still view your dashboard, but tasks and claims are disabled. Ban expires: {banned_until.strftime("%Y-%m-%d %H:%M UTC")}',
+        'user_id': user_id,
+        'is_read': False,
+        'read_by': [],
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        'message': f'User banned for {data.duration_days} days',
+        'banned_until': banned_until.isoformat()
+    }
+
+@api_router.post('/admin/users/{user_id}/unban')
+async def unban_user(user_id: str, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    user = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    # Unban user
+    await db.users.update_one(
+        {'id': user_id},
+        {'$set': {'banned': False, 'banned_until': None}}
+    )
+    
+    # Log the action
+    await db.admin_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'admin_id': payload['user_id'],
+        'admin_email': payload['email'],
+        'action': 'user_unban',
+        'user_id': user_id,
+        'user_email': user.get('email'),
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Send notification to user
+    await db.notifications.insert_one({
+        'id': str(uuid.uuid4()),
+        'title': 'Account Unbanned',
+        'message': 'Your account ban has been lifted by admin. You can now complete tasks and claim rewards again!',
+        'user_id': user_id,
+        'is_read': False,
+        'read_by': [],
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {'message': 'User unbanned successfully'}
+
+@api_router.get('/admin/logs')
+async def get_admin_logs(payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    logs = await db.admin_logs.find({}, {'_id': 0}).sort('created_at', -1).limit(100).to_list(None)
+    
+    return {'logs': logs}
+
 @api_router.get('/admin/kyc/pending')
 async def get_pending_kyc(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
