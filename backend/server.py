@@ -682,6 +682,30 @@ async def get_claim_status(payload: dict = Depends(verify_token)):
         'message': 'Ready to claim' if can_claim else 'Not ready to claim'
     }
 
+@api_router.get('/referrals/tree')
+async def get_referral_tree(payload: dict = Depends(verify_token)):
+    user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    level1_refs = await db.users.find(
+        {'referred_by': user.get('referral_code')},
+        {'_id': 0, 'id': 1, 'full_name': 1, 'email': 1, 'balance': 1, 'created_at': 1, 'referral_code': 1}
+    ).to_list(None)
+    
+    level2_refs = []
+    for l1_ref in level1_refs:
+        l2_refs = await db.users.find(
+            {'referred_by': l1_ref.get('referral_code')},
+            {'_id': 0, 'id': 1, 'full_name': 1, 'email': 1, 'balance': 1, 'created_at': 1}
+        ).to_list(None)
+        level2_refs.extend(l2_refs)
+    
+    return {
+        'level1': level1_refs,
+        'level2': level2_refs
+    }
+
 @api_router.get('/referrals/stats')
 async def get_referral_stats(payload: dict = Depends(verify_token)):
     user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
