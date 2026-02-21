@@ -98,8 +98,8 @@ class TaskClaimSystemTester:
             return None
             
         transaction_data = response.json()
-        print(f"✅ Package purchase created: {transaction_data['id']}")
-        return transaction_data['id']
+        print(f"✅ Package purchase created: {transaction_data['transaction_id']}")
+        return transaction_data['transaction_id']
         
     def approve_package(self, transaction_id):
         """Approve package purchase (admin action)"""
