@@ -275,6 +275,34 @@ export default function Dashboard() {
     }
   };
 
+  const handleLoanRepayment = async () => {
+    if (!loanRepayAmount) {
+      toast.error('Please enter repayment amount');
+      return;
+    }
+
+    const amount = parseFloat(loanRepayAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error('Invalid repayment amount');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+      const response = await axios.post(
+        `${API}/referrals/repay-loan`,
+        { amount },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Loan repayment successful! Remaining: $${response.data.remaining_loan.toFixed(2)}`);
+      setShowLoanRepayDialog(false);
+      setLoanRepayAmount('');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Failed to repay loan');
+    }
+  };
+
 
 
   if (!user) {
