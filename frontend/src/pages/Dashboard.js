@@ -623,7 +623,25 @@ export default function Dashboard() {
 
         {/* Daily Tasks */}
         <div className="glass-effect p-6">
-          <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">Daily Tasks</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gold font-montserrat">Daily Tasks</h2>
+            {claimStatus && (
+              <div className="text-right">
+                {claimStatus.already_claimed ? (
+                  <div className="text-green-500">
+                    <p className="font-semibold">✓ Daily Income Claimed</p>
+                    <p className="text-sm text-muted-foreground">${claimStatus.claimed_amount.toFixed(2)} earned today</p>
+                  </div>
+                ) : (
+                  <div className="text-muted-foreground">
+                    <p className="text-sm">Tasks: {claimStatus.tasks_completed}/{claimStatus.total_tasks}</p>
+                    <p className="text-sm">Potential: ${claimStatus.potential_income.toFixed(2)}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-4">
             {tasks.map((task) => (
               <div key={task.id} className="bg-black/40 border border-white/10 p-6 hover:border-gold/30 transition-all" data-testid={`task-${task.id}`}>
@@ -654,7 +672,7 @@ export default function Dashboard() {
                             onClick={() => completeTask(task.id)}
                             className="bg-gold text-black hover:bg-accent"
                           >
-                            Claim
+                            Mark Complete
                           </Button>
                         ) : (
                           <p className="text-sm text-muted-foreground">Wait...</p>
@@ -678,6 +696,31 @@ export default function Dashboard() {
               <p className="text-center text-muted-foreground py-8">No tasks available</p>
             )}
           </div>
+
+          {/* Claim Daily Income Button */}
+          {claimStatus && !claimStatus.already_claimed && (
+            <div className="mt-6 bg-gradient-to-r from-gold/20 to-amber-600/20 border-2 border-gold/40 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gold mb-1">Claim Your Daily Income</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {claimStatus.all_tasks_completed 
+                      ? `Complete all tasks to unlock $${claimStatus.potential_income.toFixed(2)}`
+                      : `${claimStatus.tasks_completed}/${claimStatus.total_tasks} tasks completed`}
+                  </p>
+                </div>
+                <p className="text-3xl font-bold text-gold">${claimStatus.potential_income.toFixed(2)}</p>
+              </div>
+              <Button
+                data-testid="claim-daily-income-btn"
+                onClick={claimDailyIncome}
+                disabled={!claimStatus.can_claim}
+                className="w-full bg-gold text-black hover:bg-accent font-semibold py-6 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {claimStatus.can_claim ? '🎁 Claim Daily Income' : '🔒 Complete All Tasks First'}
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Active Packages */}
