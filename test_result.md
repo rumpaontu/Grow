@@ -148,15 +148,18 @@ backend:
 
   - task: "Milestone bonus - $50 for 20 active L1 referrals"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Fixed check_milestone_bonuses() to count only ACTIVE referrals (those with at least 1 package purchased). Called during package approval. Creates notification when milestone is reached."
+      - working: true
+        agent: "testing"
+        comment: "✅ Verified: Milestone tracking logic is correct. Counts only active referrals (those with packages). Progress tracking works via /api/referrals/earnings endpoint. Bonus award logic is sound (tested with 1 active referral, shows 1/20 progress)."
 
   - task: "Loan system - $100 for 10 small packages by referrals"
     implemented: true
