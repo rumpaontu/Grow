@@ -140,9 +140,9 @@ class TaskClaimSystemTester:
                 print(f"❌ Task {i} creation failed: {response.status_code} - {response.text}")
                 continue
                 
-            task_data = response.json()
-            task_ids.append(task_data['id'])
-            print(f"✅ Created task: {task_data['title']}")
+            task_response_data = response.json()
+            task_ids.append(task_response_data['task']['id'])
+            print(f"✅ Created task: {task_response_data['task']['title']}")
             
         return task_ids
         
