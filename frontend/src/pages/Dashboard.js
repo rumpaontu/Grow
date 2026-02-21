@@ -1073,6 +1073,9 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Withdrawal Notification Popup */}
+      <WithdrawalNotification isLoggedIn={!!user} />
     </div>
   );
 }
