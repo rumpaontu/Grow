@@ -248,6 +248,70 @@ export default function AdminDashboard() {
     try {
       await axios.post(
         `${API}/admin/notifications/create`,
+        newNotification,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Notification created successfully');
+      setNewNotification({ title: '', message: '', user_id: '' });
+      fetchAdminData();
+    } catch (error) {
+      toast.error('Failed to create notification');
+    }
+  };
+
+  const handleEditBalance = async () => {
+    if (!newBalance || !balanceReason) {
+      toast.error('Please provide new balance and reason');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        `${API}/admin/users/${selectedUserForEdit.id}/edit-balance`,
+        { new_balance: parseFloat(newBalance), reason: balanceReason },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Balance updated successfully');
+      setShowBalanceEditDialog(false);
+      setNewBalance('');
+      setBalanceReason('');
+      fetchAdminData();
+    } catch (error) {
+      toast.error('Failed to update balance');
+    }
+  };
+
+  const handleBanUser = async () => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        `${API}/admin/users/${selectedUserForBan.id}/ban`,
+        { duration_days: banDuration },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`User banned for ${banDuration} days`);
+      setShowBanDialog(false);
+      fetchAdminData();
+    } catch (error) {
+      toast.error('Failed to ban user');
+    }
+  };
+
+  const handleUnbanUser = async (userId) => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        `${API}/admin/users/${userId}/unban`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('User unbanned successfully');
+      fetchAdminData();
+    } catch (error) {
+      toast.error('Failed to unban user');
+    }
+  };
         {
           title: newNotification.title,
           message: newNotification.message,
