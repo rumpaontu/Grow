@@ -914,6 +914,27 @@ async def repay_loan(data: LoanRepayment, payload: dict = Depends(verify_token))
         'remaining_loan': remaining_loan
     }
 
+@api_router.get('/withdrawals/recent-approved')
+async def get_recent_approved_withdrawals():
+    # Get withdrawals approved in last 5 minutes for real-time display
+    five_minutes_ago = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
+    
+    recent_withdrawals = await db.withdrawals.find(
+        {
+            'status': 'approved',
+            'updated_at': {'$gte': five_minutes_ago}
+        },
+        {'_id': 0}
+    ).sort('updated_at', -1).limit(10).to_list(10)
+    
+    # Get user names for approved withdrawals
+    for withdrawal in recent_withdrawals:
+        user = await db.users.find_one({'id': withdrawal['user_id']}, {'_id': 0, 'full_name': 1})
+        if user:
+            withdrawal['user_name'] = user['full_name']
+    
+    return {'withdrawals': recent_withdrawals}
+
 @api_router.post('/transactions/deposit')
 async def submit_deposit(data: PackagePurchase, payload: dict = Depends(verify_token)):
     return await purchase_package(data, payload)
