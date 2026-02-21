@@ -46,6 +46,7 @@ export default function Dashboard() {
   const [showLoanRepayDialog, setShowLoanRepayDialog] = useState(false);
   const [claimStatus, setClaimStatus] = useState(null);
   const [bannerAds, setBannerAds] = useState([]);
+  const [bonusSettings, setBonusSettings] = useState(null);
 
 
   useEffect(() => {
