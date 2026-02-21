@@ -624,20 +624,33 @@ async def get_referral_earnings(payload: dict = Depends(verify_token)):
     loan_small = sum(t['amount'] for t in transactions if t['type'] == 'loan_bonus_10_small')
     loan_big = sum(t['amount'] for t in transactions if t['type'] == 'loan_bonus_10_big')
     
-    # Get milestone progress
-    level1_refs = await db.users.find({'referred_by': user['referral_code']}, {'_id': 0}).to_list(None)
-    active_level1_count = len(level1_refs)
+    # Get milestone progress (active referrals only)
+    level1_refs = await db.users.find({'referred_by': user.get('referral_code')}, {'_id': 0, 'id': 1}).to_list(None)
+    active_level1_count = 0
+    for ref in level1_refs:
+        package_count = await db.packages.count_documents({'user_id': ref['id']})
+        if package_count > 0:
+            active_level1_count += 1
+    
     milestone_progress = min(active_level1_count, 20)
     milestone_unlocked = milestone_bonus > 0
     
-    # Get loan progress
-    user_packages = await db.packages.find({'user_id': payload['user_id']}, {'_id': 0}).to_list(None)
-    small_packages_count = sum(1 for p in user_packages if p['amount'] == 25)
-    big_packages_count = sum(1 for p in user_packages if p['amount'] == 60)
+    # Get loan progress from REFERRAL packages
+    referral_users = await db.users.find(
+        {'referred_by': user.get('referral_code')},
+        {'_id': 0, 'id': 1}
+    ).to_list(None)
     
-    loan_small_progress = min(small_packages_count, 10)
+    small_ref_packages = 0
+    big_ref_packages = 0
+    for ref_user in referral_users:
+        ref_packages = await db.packages.find({'user_id': ref_user['id']}, {'_id': 0}).to_list(None)
+        small_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 25)
+        big_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 60)
+    
+    loan_small_progress = min(small_ref_packages, 10)
     loan_small_unlocked = loan_small > 0
-    loan_big_progress = min(big_packages_count, 10)
+    loan_big_progress = min(big_ref_packages, 10)
     loan_big_unlocked = loan_big > 0
     
     return {
@@ -671,7 +684,8 @@ async def get_referral_earnings(payload: dict = Depends(verify_token)):
                 'unlocked': loan_big_unlocked
             }
         },
-        'total_earned': instant_l1 + instant_l2 + daily_l1 + daily_l2 + milestone_bonus + loan_small + loan_big
+        'loan_balance': user.get('loan_balance', 0),
+        'total_earned': instant_l1 + instant_l2 + daily_l1 + daily_l2 + milestone_bonus + loan_big
     }
 
 @api_router.post('/transactions/deposit')
