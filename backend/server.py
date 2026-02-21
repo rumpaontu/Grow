@@ -1391,6 +1391,53 @@ async def track_banner_click(banner_id: str):
     )
     return {'message': 'Click tracked'}
 
+# Bonus Settings Management
+@api_router.get('/bonus-settings')
+async def get_bonus_settings():
+    settings = await db.bonus_settings.find({}, {'_id': 0}).to_list(10)
+    return {'settings': settings}
+
+@api_router.get('/admin/bonus-settings')
+async def get_admin_bonus_settings(payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    settings = await db.bonus_settings.find({}, {'_id': 0}).to_list(10)
+    return {'settings': settings}
+
+@api_router.put('/admin/bonus-settings/{setting_id}')
+async def update_bonus_setting(setting_id: str, data: BonusSettingUpdate, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    setting = await db.bonus_settings.find_one({'id': setting_id}, {'_id': 0})
+    if not setting:
+        raise HTTPException(status_code=404, detail='Setting not found')
+    
+    update_data = {'updated_at': datetime.now(timezone.utc).isoformat()}
+    if data.target is not None:
+        update_data['target'] = data.target
+    if data.amount is not None:
+        update_data['amount'] = data.amount
+    if data.enabled is not None:
+        update_data['enabled'] = data.enabled
+    
+    await db.bonus_settings.update_one({'id': setting_id}, {'$set': update_data})
+    
+    # Log the action
+    await db.admin_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'admin_id': payload['user_id'],
+        'admin_email': payload['email'],
+        'action': 'bonus_setting_update',
+        'setting_id': setting_id,
+        'setting_name': setting.get('name'),
+        'changes': update_data,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {'message': 'Bonus setting updated successfully'}
+
 @api_router.get('/admin/kyc/pending')
 async def get_pending_kyc(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
