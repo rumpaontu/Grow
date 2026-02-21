@@ -98,9 +98,24 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implement complete 2-tier referral system with instant bonuses (5% L1, 2% L2) on package purchases, daily recurring bonuses (5% L1, 2% L2) from task earnings, milestone bonus ($50 for 20 active L1 referrals), loan system ($100 for 10 small packages, $500 for 10 big packages purchased by referrals), and attractive UI to display all earnings with loan repayment functionality."
+user_problem_statement: "Test the FIXED daily task and income claim system. Previously, the system was paying out daily income for EACH individual task completion. This has been completely redesigned so users must complete ALL tasks before claiming their SINGLE daily income payment."
 
 backend:
+  - task: "Daily task and income claim system - Fixed logic"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "CRITICAL BUG FOUND: /tasks/claim-status endpoint had completely wrong implementation - it was returning referral tree data instead of task completion status. This made it impossible to properly track task progress."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED AND VERIFIED: 1) Fixed /tasks/claim-status endpoint to return proper task completion status with fields: can_claim, tasks_completed, total_tasks, all_tasks_completed, already_claimed, active_packages. 2) Verified task completion logic: users must complete ALL 29 existing tasks before claiming. 3) Verified no individual payouts per task. 4) Verified single daily income claim after all tasks complete. 5) Verified double claim prevention. 6) Verified multiple packages combine daily income correctly ($25 = $1/day, $60 = $2.5/day). 7) Verified referral bonuses trigger on claim, not per task. 8) Verified package days_remaining decrements on claim. ALL TESTS PASSED!"
+
   - task: "Referral tracking and URL parameter handling"
     implemented: true
     working: true
