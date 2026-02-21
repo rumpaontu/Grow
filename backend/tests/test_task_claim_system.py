@@ -129,10 +129,8 @@ class TaskClaimSystemTester:
         for i in range(1, count + 1):
             task_data = {
                 "title": f"Daily Task {i}",
-                "description": f"Complete daily task number {i}",
-                "reward": 0,  # Tasks don't give individual rewards anymore
-                "type": "daily",
-                "is_active": True
+                "url": f"https://example.com/task-{i}",  # Required field
+                "task_type": "daily"  # Required field (not "type")
             }
             
             response = self.session.post(f"{BACKEND_URL}/admin/tasks/create", 
