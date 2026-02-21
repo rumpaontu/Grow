@@ -27,10 +27,10 @@ app = FastAPI()
 api_router = APIRouter(prefix="/api")
 security = HTTPBearer()
 
-JWT_SECRET = os.environ.get('JWT_SECRET', 'growvault_secret_key_2024')
+JWT_SECRET = os.environ['JWT_SECRET']
 JWT_ALGORITHM = 'HS256'
-ADMIN_EMAIL = 'moneypower15@gmail.com'
-ADMIN_PASSWORD = 'Adminpowerssa15'
+ADMIN_EMAIL = os.environ['ADMIN_EMAIL']
+ADMIN_PASSWORD = os.environ['ADMIN_PASSWORD']
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
