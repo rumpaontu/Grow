@@ -346,6 +346,82 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (editingBanner) {
+          setEditingBanner({ ...editingBanner, image_base64: reader.result });
+        } else {
+          setNewBanner({ ...newBanner, image_base64: reader.result });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCreateBanner = async () => {
+    if (!newBanner.title || !newBanner.target_url || !newBanner.image_base64) {
+      toast.error('Please provide title, URL and upload an image');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        `${API}/admin/banner-ads/create`,
+        newBanner,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Banner ad created successfully');
+      setShowBannerDialog(false);
+      setNewBanner({ title: '', target_url: '', image_base64: '', active: true });
+      fetchAdminData();
+    } catch (error) {
+      toast.error('Failed to create banner ad');
+    }
+  };
+
+  const handleUpdateBanner = async () => {
+    if (!editingBanner.title || !editingBanner.target_url) {
+      toast.error('Please provide title and URL');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+      await axios.put(
+        `${API}/admin/banner-ads/${editingBanner.id}`,
+        {
+          title: editingBanner.title,
+          target_url: editingBanner.target_url,
+          active: editingBanner.active,
+          image_base64: editingBanner.image_base64
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Banner ad updated successfully');
+      setEditingBanner(null);
+      fetchAdminData();
+    } catch (error) {
+      toast.error('Failed to update banner ad');
+    }
+  };
+
+  const handleDeleteBanner = async (bannerId) => {
+    const token = localStorage.getItem('token');
+    try {
+      await axios.delete(`${API}/admin/banner-ads/${bannerId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Banner ad deleted successfully');
+      fetchAdminData();
+    } catch (error) {
+      toast.error('Failed to delete banner ad');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-dark-obsidian">
       {/* Header */}
