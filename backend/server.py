@@ -225,7 +225,7 @@ async def check_milestone_bonuses(user_id: str):
         return
     
     # Get all level 1 referrals
-    level1_refs = await db.users.find({'referred_by': user_ref_code}, {'_id': 0, 'id': 1}).to_list(None)
+    level1_refs = await db.users.find({'referred_by': user_ref_code}, {'_id': 0, 'id': 1}).to_list(1000)
     
     # Count only active referrals (those who have purchased at least 1 package)
     active_count = 0
