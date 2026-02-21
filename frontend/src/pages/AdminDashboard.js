@@ -43,6 +43,9 @@ export default function AdminDashboard() {
   const [showBannerDialog, setShowBannerDialog] = useState(false);
   const [newBanner, setNewBanner] = useState({ title: '', target_url: '', image_base64: '', active: true });
   const [editingBanner, setEditingBanner] = useState(null);
+  const [bonusSettings, setBonusSettings] = useState([]);
+  const [showBonusEditDialog, setShowBonusEditDialog] = useState(false);
+  const [editingBonusSetting, setEditingBonusSetting] = useState(null);
 
   useEffect(() => {
     fetchAdminData();
