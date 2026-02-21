@@ -245,7 +245,7 @@ class ReferralSystemTester:
         response = self.make_request('GET', '/auth/me', token=user.token)
         
         if response['success']:
-            user_data = response['data']['user']
+            user_data = response['data']  # The response data is the user object directly
             user.balance = user_data.get('balance', 0.0)
             user.loan_balance = user_data.get('loan_balance', 0.0)
             return {
