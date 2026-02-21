@@ -163,7 +163,7 @@ backend:
 
   - task: "Loan system - $100 for 10 small packages by referrals"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
@@ -175,10 +175,13 @@ backend:
       - working: false
         agent: "testing"
         comment: "CRITICAL BUG: Loan logic is backwards! Lines 1269-1343 check if transaction user has referrals, but should check if transaction user WAS REFERRED and award loan to the REFERRER. Current: B buys package → check if B has referrals → award loan to B. Correct: B buys package → find A who referred B → check if A's referrals have 10 packages → award loan to A. Tested with 10 referral packages, no loan awarded."
+      - working: true
+        agent: "testing"
+        comment: "✅ VERIFIED: Bug fix successful! Created comprehensive test with 1 referrer (User A) and 10 referrals purchasing $25 packages. After 10th package approval, User A correctly received $100 loan (balance +$112.5 total including instant bonuses, loan_balance +$100). Loan awarded to REFERRER, not purchaser. Notification system working. API endpoints returning correct data."
 
   - task: "Special bonus - $500 for 10 big packages by referrals"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 1
     priority: "high"
@@ -190,6 +193,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "Same critical bug as loan system. Logic checks wrong user - should find referrer of package purchaser and award bonus to referrer, not purchaser. Tested with 10 big packages by referrals, no bonus awarded."
+      - working: true
+        agent: "testing"  
+        comment: "✅ VERIFIED: Bug fix successful! Tested with same referrer (User A) and 10 additional referrals purchasing $60 packages. After 10th big package approval, User A correctly received $500 special bonus plus $30 instant bonuses (total +$530). Special bonus is separate from loan system (loan_balance unchanged). Bonus awarded to REFERRER, not purchaser. API shows both small and big loans unlocked correctly."
 
   - task: "Loan repayment endpoint"
     implemented: true
