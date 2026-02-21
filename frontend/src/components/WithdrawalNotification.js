@@ -101,11 +101,18 @@ const WithdrawalNotification = ({ isLoggedIn }) => {
 
   // Show fake notifications
   useEffect(() => {
-    if (!isLoggedIn) return;
+    if (!isLoggedIn) {
+      console.log('WithdrawalNotification: Not logged in, skipping');
+      return;
+    }
+
+    console.log('WithdrawalNotification: Starting fake notification timer');
 
     const showFakeNotification = () => {
       const { name, country } = getRandomName();
       const amount = getRandomAmount();
+      
+      console.log('Showing fake notification:', { name, country, amount });
       
       showNotification({
         name,
@@ -115,20 +122,30 @@ const WithdrawalNotification = ({ isLoggedIn }) => {
       });
     };
 
-    // Random interval between 30-60 seconds
+    // Show first notification after 5 seconds
+    const initialTimeout = setTimeout(() => {
+      showFakeNotification();
+    }, 5000);
+
+    // Random interval between 30-60 seconds for subsequent notifications
     const getRandomInterval = () => Math.random() * (60000 - 30000) + 30000;
 
-    let timeoutId;
-    const scheduleNext = () => {
-      timeoutId = setTimeout(() => {
+    let intervalId;
+    const startInterval = () => {
+      intervalId = setInterval(() => {
         showFakeNotification();
-        scheduleNext();
       }, getRandomInterval());
     };
 
-    scheduleNext();
+    // Start interval after first notification
+    setTimeout(() => {
+      startInterval();
+    }, 5000 + getRandomInterval());
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(initialTimeout);
+      if (intervalId) clearInterval(intervalId);
+    };
   }, [isLoggedIn]);
 
   if (!isLoggedIn) return null;
