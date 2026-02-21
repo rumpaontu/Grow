@@ -132,6 +132,75 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Supported Partners Section */}
+      <div className="container mx-auto px-6 py-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          <h3 className="text-2xl font-bold text-gold mb-8 font-montserrat">Supported Partners</h3>
+          <div className="flex justify-center items-center gap-12 md:gap-16 flex-wrap">
+            {/* Binance Logo */}
+            <div className="group">
+              <div className="bg-gold/10 p-6 rounded-lg border border-gold/30 hover:border-gold/60 transition-all hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                <svg className="w-20 h-20 text-gold" viewBox="0 0 126.61 126.61" fill="currentColor">
+                  <path d="M38.73 53.2l24.59-24.58 24.6 24.6 14.3-14.31L63.32 0 24.42 38.9l14.31 14.3zM0 63.31l14.3-14.3 14.31 14.3-14.3 14.3zM38.73 73.41l24.59 24.59 24.6-24.6 14.31 14.29-38.9 38.91-38.91-38.88 14.3-14.32zM98 63.31l14.3-14.3 14.31 14.3-14.3 14.3z"/>
+                  <path d="M77.83 63.3L63.32 48.78 52.59 59.51l-1.246 1.245-2.045 2.046 14.51 14.52L77.83 63.3z"/>
+                </svg>
+              </div>
+              <p className="text-gold text-sm mt-3 font-semibold">Binance</p>
+            </div>
+
+            {/* USDT Logo */}
+            <div className="group">
+              <div className="bg-gold/10 p-6 rounded-lg border border-gold/30 hover:border-gold/60 transition-all hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                <svg className="w-20 h-20" viewBox="0 0 2000 2000" fill="none">
+                  <path d="M1000,0c552.26,0,1000,447.74,1000,1000S1552.24,2000,1000,2000,0,1552.38,0,1000,447.68,0,1000,0" fill="#50AF95"/>
+                  <path d="M1123.42,866.76V718H1463.6V491.34H537.28V718H877.5V866.64C601,879.34,393.1,934.1,393.1,999.7s208,120.36,484.4,133.14v476.5h246V1132.8c276.4-12.74,484.48-67.46,484.48-133.1S1399.8,879.5,1123.42,866.76Zm0,225.64v-.12c-9.24.24-61.24,1.9-123.42,1.9-62.64,0-114.48-1.66-123.06-1.9v.12C633.18,1081.66,451,1039.12,451,988.22S633.18,894.78,877,884v360.78c8.7-.24,60.84-1.86,123.06-1.86,62.18,0,114.18,1.62,123.42,1.86V884c243.78,10.74,425.94,53.28,425.94,104.18S1367.2,1081.66,1123.42,1092.4Z" fill="#FFF"/>
+                </svg>
+              </div>
+              <p className="text-gold text-sm mt-3 font-semibold">USDT (TRC20)</p>
+            </div>
+
+            {/* Bitcoin Logo */}
+            <div className="group">
+              <div className="bg-gold/10 p-6 rounded-lg border border-gold/30 hover:border-gold/60 transition-all hover:shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                <svg className="w-20 h-20" viewBox="0 0 32 32" fill="none">
+                  <circle cx="16" cy="16" r="16" fill="#F7931A"/>
+                  <path d="M23.189 14.02c.314-2.096-1.283-3.223-3.465-3.975l.708-2.84-1.728-.43-.69 2.765c-.454-.114-.92-.22-1.385-.326l.695-2.783L15.596 6l-.708 2.839c-.376-.086-.746-.17-1.104-.26l.002-.009-2.384-.595-.46 1.846s1.283.294 1.256.312c.7.175.826.638.805 1.006l-.806 3.235c.048.012.11.03.18.057l-.183-.045-1.13 4.532c-.086.212-.303.531-.793.41.018.025-1.256-.313-1.256-.313l-.858 1.978 2.25.561c.418.105.828.215 1.231.318l-.715 2.872 1.727.43.708-2.84c.472.127.93.245 1.378.357l-.706 2.828 1.728.43.715-2.866c2.948.558 5.164.333 6.097-2.333.752-2.146-.037-3.385-1.588-4.192 1.13-.26 1.98-1.003 2.207-2.538zm-3.95 5.538c-.533 2.147-4.148.986-5.32.695l.95-3.805c1.172.293 4.929.872 4.37 3.11zm.535-5.569c-.487 1.953-3.495.96-4.47.717l.86-3.45c.975.243 4.118.696 3.61 2.733z" fill="white"/>
+                </svg>
+              </div>
+              <p className="text-gold text-sm mt-3 font-semibold">Bitcoin (BTC)</p>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-black/60 border-t border-gold/20 py-8 mt-16">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-muted-foreground text-sm">
+              © 2022-2026 GrowVault Global. All Rights Reserved.
+            </p>
+            <div className="flex gap-6">
+              <Link to="/terms" className="text-muted-foreground hover:text-gold text-sm transition-colors">
+                Terms & Conditions
+              </Link>
+              <Link to="/privacy" className="text-muted-foreground hover:text-gold text-sm transition-colors">
+                Privacy Policy
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Withdrawal Notifications - Always visible on landing page */}
+      <WithdrawalNotification isLoggedIn={true} />
+
       {/* Sponsor Form Modal */}
       {showSponsorForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-6">
