@@ -273,8 +273,14 @@ class TaskClaimSystemTester:
         print("\n🎯 TEST 4: Complete All Tasks & Claim Daily Income")
         print("-" * 50)
         
-        print("\n📋 Completing Task 3...")
-        self.complete_task(user['token'], task_ids[2])
+        print(f"\n📋 Completing remaining {len(task_ids) - min(5, len(task_ids))} tasks...")
+        # Complete remaining tasks
+        for i in range(min(5, len(task_ids)), len(task_ids)):
+            self.complete_task(user['token'], task_ids[i])
+            if (i + 1) % 5 == 0:  # Progress update every 5 tasks
+                print(f"📋 Completed {i + 1}/{len(task_ids)} tasks...")
+        
+        print(f"✅ All {len(task_ids)} tasks completed!")
         
         balance_before_claim = self.get_user_balance(user['token'])
         print(f"💰 Balance before claim: ${balance_before_claim}")
