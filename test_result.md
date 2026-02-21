@@ -223,15 +223,18 @@ backend:
 
   - task: "User model loan_balance field"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Added loan_balance field to user document initialization. Set to 0 by default. Tracks outstanding loan amount separately from regular balance."
+      - working: true
+        agent: "testing"
+        comment: "✅ Verified: loan_balance field is properly initialized and tracked. Can be queried via /auth/me endpoint. Used correctly in loan repayment operations."
 
 frontend:
   - task: "Referral earnings display section"
