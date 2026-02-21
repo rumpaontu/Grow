@@ -299,13 +299,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Loan system - $100 for 10 small packages by referrals"
-    - "Special bonus - $500 for 10 big packages by referrals"
+    []
   stuck_tasks:
-    - "Loan system - $100 for 10 small packages by referrals"
-    - "Special bonus - $500 for 10 big packages by referrals"
-  test_all: true
-  test_priority: "stuck_first"
+    []
+  test_all: false
+  test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
