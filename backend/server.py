@@ -112,6 +112,18 @@ class BalanceEdit(BaseModel):
 class UserBan(BaseModel):
     duration_days: int  # 3, 7, 15, or 30
 
+class BannerAdCreate(BaseModel):
+    image_base64: str
+    target_url: str
+    title: str
+    active: bool = True
+
+class BannerAdUpdate(BaseModel):
+    target_url: Optional[str] = None
+    title: Optional[str] = None
+    active: Optional[bool] = None
+    image_base64: Optional[str] = None
+
 def create_token(user_id: str, email: str, role: str) -> str:
     payload = {
         'user_id': user_id,
