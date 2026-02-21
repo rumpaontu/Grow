@@ -761,7 +761,7 @@ async def get_referral_stats(payload: dict = Depends(verify_token)):
     
     level1_count = await db.users.count_documents({'referred_by': user['referral_code']})
     
-    level1_refs = await db.users.find({'referred_by': user['referral_code']}, {'_id': 0, 'referral_code': 1}).to_list(None)
+    level1_refs = await db.users.find({'referred_by': user['referral_code']}, {'_id': 0, 'referral_code': 1}).to_list(1000)
     level2_count = 0
     for l1_ref in level1_refs:
         count = await db.users.count_documents({'referred_by': l1_ref['referral_code']})
