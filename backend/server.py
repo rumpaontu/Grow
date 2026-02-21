@@ -1798,58 +1798,64 @@ async def approve_transaction(transaction_id: str, payload: dict = Depends(verif
                 small_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 25)
                 big_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 60)
             
-            # Award $100 loan for 10 small packages by referrals
-            if small_ref_packages >= 10:
+            # Get loan settings
+            loan_setting = await db.bonus_settings.find_one({'id': 'loan_small_packages'}, {'_id': 0})
+            bonus_setting = await db.bonus_settings.find_one({'id': 'bonus_big_packages'}, {'_id': 0})
+            
+            # Award loan for small packages by referrals
+            if loan_setting and loan_setting.get('enabled') and small_ref_packages >= loan_setting['target']:
                 already_awarded = await db.transactions.find_one({
                     'user_id': referrer['id'],
                     'type': 'loan_bonus_10_small'
                 })
                 if not already_awarded:
+                    loan_amount = loan_setting['amount']
                     await db.users.update_one(
                         {'id': referrer['id']},
-                        {'$inc': {'balance': 100, 'loan_balance': 100}}
+                        {'$inc': {'balance': loan_amount, 'loan_balance': loan_amount}}
                     )
                     await db.transactions.insert_one({
                         'id': str(uuid.uuid4()),
                         'user_id': referrer['id'],
                         'type': 'loan_bonus_10_small',
-                        'amount': 100,
+                        'amount': loan_amount,
                         'status': 'completed',
                         'created_at': datetime.now(timezone.utc).isoformat()
                     })
                     await db.notifications.insert_one({
                         'id': str(uuid.uuid4()),
                         'title': 'Loan Unlocked!',
-                        'message': 'Congratulations! You unlocked $100 loan for 10 small packages purchased by your referrals. Remember to repay it!',
+                        'message': f'Congratulations! You unlocked ${loan_amount:.2f} loan for {loan_setting["target"]} small packages purchased by your referrals. Remember to repay it!',
                         'user_id': referrer['id'],
                         'is_read': False,
                         'read_by': [],
                         'created_at': datetime.now(timezone.utc).isoformat()
                     })
             
-            # Award $500 bonus for 10 big packages by referrals
-            if big_ref_packages >= 10:
+            # Award bonus for big packages by referrals
+            if bonus_setting and bonus_setting.get('enabled') and big_ref_packages >= bonus_setting['target']:
                 already_awarded = await db.transactions.find_one({
                     'user_id': referrer['id'],
                     'type': 'loan_bonus_10_big'
                 })
                 if not already_awarded:
+                    bonus_amount = bonus_setting['amount']
                     await db.users.update_one(
                         {'id': referrer['id']},
-                        {'$inc': {'balance': 500}}
+                        {'$inc': {'balance': bonus_amount}}
                     )
                     await db.transactions.insert_one({
                         'id': str(uuid.uuid4()),
                         'user_id': referrer['id'],
                         'type': 'loan_bonus_10_big',
-                        'amount': 500,
+                        'amount': bonus_amount,
                         'status': 'completed',
                         'created_at': datetime.now(timezone.utc).isoformat()
                     })
                     await db.notifications.insert_one({
                         'id': str(uuid.uuid4()),
                         'title': 'Special Bonus Unlocked!',
-                        'message': 'Congratulations! You earned $500 bonus for 10 big packages purchased by your referrals!',
+                        'message': f'Congratulations! You earned ${bonus_amount:.2f} bonus for {bonus_setting["target"]} big packages purchased by your referrals!',
                         'user_id': referrer['id'],
                         'is_read': False,
                         'read_by': [],
