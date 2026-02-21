@@ -322,10 +322,11 @@ class ReferralSystemTester:
             print("❌ Cannot proceed without admin access")
             return
         
-        # 2. Create test users
-        user_a = TestUser("Alice Johnson", "alice.test@example.com", "password123")
-        user_b = TestUser("Bob Smith", "bob.test@example.com", "password123")
-        user_c = TestUser("Charlie Brown", "charlie.test@example.com", "password123")
+        # 2. Create test users with unique timestamps
+        timestamp = str(int(time.time()))
+        user_a = TestUser("Alice Johnson", f"alice.test.{timestamp}@example.com", "password123")
+        user_b = TestUser("Bob Smith", f"bob.test.{timestamp}@example.com", "password123")
+        user_c = TestUser("Charlie Brown", f"charlie.test.{timestamp}@example.com", "password123")
         
         print("\n📝 TEST 1: Referral Registration Flow")
         if not self.create_user(user_a):
