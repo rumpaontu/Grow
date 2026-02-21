@@ -207,7 +207,27 @@ class ReferralSystemTester:
         """Admin approves a transaction"""
         print(f"\n✅ Admin approving transaction for {user_name}...")
         
-        response = self.make_request('POST', f'/admin/transactions/{transaction_id}/approve', {}, token=self.admin_token)
+        # First get pending transactions to find the actual database ID
+        pending_response = self.make_request('GET', '/admin/transactions/pending', token=self.admin_token)
+        if not pending_response['success']:
+            self.log_result(f"Approve Transaction {user_name}", False, "Failed to get pending transactions", pending_response['data'])
+            return False
+        
+        # Find the transaction with matching transaction_id
+        transactions = pending_response['data'].get('transactions', [])
+        target_transaction = None
+        for tx in transactions:
+            if tx.get('transaction_id') == transaction_id:
+                target_transaction = tx
+                break
+        
+        if not target_transaction:
+            self.log_result(f"Approve Transaction {user_name}", False, f"Transaction {transaction_id} not found in pending")
+            return False
+        
+        # Use the database ID for approval
+        db_transaction_id = target_transaction['id']
+        response = self.make_request('POST', f'/admin/transactions/{db_transaction_id}/approve', {}, token=self.admin_token)
         
         if response['success']:
             self.log_result(f"Approve Transaction {user_name}", True, "Transaction approved by admin")
