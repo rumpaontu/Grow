@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { TrendingUp, Users, Shield, ArrowRight, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import axios from 'axios';
 import { toast } from 'sonner';
+import WithdrawalNotification from '@/components/WithdrawalNotification';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
