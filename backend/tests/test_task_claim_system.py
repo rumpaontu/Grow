@@ -257,13 +257,19 @@ class TaskClaimSystemTester:
         
         print("🔍 Checking claim status after 2/3 tasks...")
         
-        # The current claim-status endpoint is broken - it returns referral tree instead
-        # Let's test what it actually returns
         status = self.get_claim_status(user['token'])
-        print(f"📊 Current claim-status response: {status}")
+        print(f"📊 Claim status response: {status}")
         
-        # This will likely fail because the endpoint is wrong, but let's document it
-        print("❌ TEST 2 ISSUE: /tasks/claim-status endpoint returns referral tree instead of task status")
+        if status and isinstance(status, dict):
+            if (status.get('can_claim') == False and 
+                status.get('tasks_completed', 0) == 2 and 
+                status.get('total_tasks', 0) == 3 and 
+                status.get('all_tasks_completed') == False):
+                print("✅ TEST 2 PASSED: Claim status correctly shows 2/3 tasks completed")
+            else:
+                print("❌ TEST 2 FAILED: Claim status response incorrect")
+        else:
+            print("❌ TEST 2 FAILED: Invalid claim status response")
         
         # TEST 3: Attempt Early Claim (Should Fail)
         print("\n🚫 TEST 3: Attempt Early Claim (Should Fail)")
