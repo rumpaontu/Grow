@@ -293,16 +293,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Referral tracking and URL parameter handling"
-    - "Instant bonuses on package purchase"
-    - "Daily recurring bonuses from task earnings"
-    - "Milestone bonus"
-    - "Loan system"
-    - "Loan repayment"
-    - "Referral earnings UI display"
-  stuck_tasks: []
+    - "Loan system - $100 for 10 small packages by referrals"
+    - "Special bonus - $500 for 10 big packages by referrals"
+  stuck_tasks:
+    - "Loan system - $100 for 10 small packages by referrals"
+    - "Special bonus - $500 for 10 big packages by referrals"
   test_all: true
-  test_priority: "sequential"
+  test_priority: "stuck_first"
 
 agent_communication:
   - agent: "main"
