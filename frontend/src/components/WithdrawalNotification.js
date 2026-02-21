@@ -161,7 +161,15 @@ const WithdrawalNotification = ({ isLoggedIn }) => {
   if (!isLoggedIn) return null;
 
   return (
-    <AnimatePresence>
+    <>
+      {/* Debug indicator */}
+      {showDebug && (
+        <div className="fixed bottom-2 right-2 bg-gold/20 text-gold text-xs px-3 py-1 rounded border border-gold/40 z-50">
+          Withdrawal notifications active
+        </div>
+      )}
+
+      <AnimatePresence>
       {notification && (
         <motion.div
           initial={{ opacity: 0, x: -100 }}
