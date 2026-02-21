@@ -691,6 +691,63 @@ async def get_referral_earnings(payload: dict = Depends(verify_token)):
         'total_earned': instant_l1 + instant_l2 + daily_l1 + daily_l2 + milestone_bonus + loan_big
     }
 
+@api_router.post('/referrals/repay-loan')
+async def repay_loan(data: LoanRepayment, payload: dict = Depends(verify_token)):
+    if payload['role'] == 'admin':
+        raise HTTPException(status_code=403, detail='Admin cannot repay loans')
+    
+    user = await db.users.find_one({'id': payload['user_id']}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    
+    loan_balance = user.get('loan_balance', 0)
+    
+    if loan_balance <= 0:
+        raise HTTPException(status_code=400, detail='No outstanding loan to repay')
+    
+    if data.amount <= 0:
+        raise HTTPException(status_code=400, detail='Repayment amount must be positive')
+    
+    if data.amount > loan_balance:
+        raise HTTPException(status_code=400, detail=f'Repayment amount exceeds loan balance of ${loan_balance}')
+    
+    if user['balance'] < data.amount:
+        raise HTTPException(status_code=400, detail='Insufficient balance to repay loan')
+    
+    # Deduct from both balance and loan_balance
+    await db.users.update_one(
+        {'id': payload['user_id']},
+        {'$inc': {'balance': -data.amount, 'loan_balance': -data.amount}}
+    )
+    
+    # Record transaction
+    await db.transactions.insert_one({
+        'id': str(uuid.uuid4()),
+        'user_id': payload['user_id'],
+        'type': 'loan_repayment',
+        'amount': -data.amount,
+        'status': 'completed',
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    # Send notification
+    remaining_loan = loan_balance - data.amount
+    await db.notifications.insert_one({
+        'id': str(uuid.uuid4()),
+        'title': 'Loan Repayment Successful',
+        'message': f'You repaid ${data.amount:.2f}. Remaining loan balance: ${remaining_loan:.2f}',
+        'user_id': payload['user_id'],
+        'is_read': False,
+        'read_by': [],
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {
+        'message': 'Loan repayment successful',
+        'amount_paid': data.amount,
+        'remaining_loan': remaining_loan
+    }
+
 @api_router.post('/transactions/deposit')
 async def submit_deposit(data: PackagePurchase, payload: dict = Depends(verify_token)):
     return await purchase_package(data, payload)
