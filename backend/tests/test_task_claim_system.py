@@ -135,7 +135,7 @@ class TaskClaimSystemTester:
                 "is_active": True
             }
             
-            response = self.session.post(f"{BACKEND_URL}/admin/tasks", 
+            response = self.session.post(f"{BACKEND_URL}/admin/tasks/create", 
                                        json=task_data, headers=headers)
             
             if response.status_code != 201:
