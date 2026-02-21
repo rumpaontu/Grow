@@ -630,12 +630,12 @@ export default function Dashboard() {
                 {claimStatus.already_claimed ? (
                   <div className="text-green-500">
                     <p className="font-semibold">✓ Daily Income Claimed</p>
-                    <p className="text-sm text-muted-foreground">${claimStatus.claimed_amount.toFixed(2)} earned today</p>
+                    <p className="text-sm text-muted-foreground">${claimStatus.claimed_amount?.toFixed(2) || '0.00'} earned today</p>
                   </div>
                 ) : (
                   <div className="text-muted-foreground">
-                    <p className="text-sm">Tasks: {claimStatus.tasks_completed}/{claimStatus.total_tasks}</p>
-                    <p className="text-sm">Potential: ${claimStatus.potential_income.toFixed(2)}</p>
+                    <p className="text-sm">Tasks: {claimStatus.tasks_completed || 0}/{claimStatus.total_tasks || 0}</p>
+                    <p className="text-sm">Potential: ${claimStatus.potential_income?.toFixed(2) || '0.00'}</p>
                   </div>
                 )}
               </div>
@@ -705,11 +705,11 @@ export default function Dashboard() {
                   <h3 className="text-xl font-bold text-gold mb-1">Claim Your Daily Income</h3>
                   <p className="text-sm text-muted-foreground">
                     {claimStatus.all_tasks_completed 
-                      ? `Complete all tasks to unlock $${claimStatus.potential_income.toFixed(2)}`
-                      : `${claimStatus.tasks_completed}/${claimStatus.total_tasks} tasks completed`}
+                      ? `All tasks completed! Ready to claim $${claimStatus.potential_income?.toFixed(2) || '0.00'}`
+                      : `${claimStatus.tasks_completed || 0}/${claimStatus.total_tasks || 0} tasks completed`}
                   </p>
                 </div>
-                <p className="text-3xl font-bold text-gold">${claimStatus.potential_income.toFixed(2)}</p>
+                <p className="text-3xl font-bold text-gold">${claimStatus.potential_income?.toFixed(2) || '0.00'}</p>
               </div>
               <Button
                 data-testid="claim-daily-income-btn"
