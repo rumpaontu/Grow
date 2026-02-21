@@ -303,7 +303,7 @@ async def daily_task_reset():
 async def process_daily_income():
     logger.info('Processing daily income for active packages')
     try:
-        active_packages = await db.packages.find({'is_active': True, 'days_remaining': {'$gt': 0}}).to_list(None)
+        active_packages = await db.packages.find({'is_active': True, 'days_remaining': {'$gt': 0}}).to_list(10000)
         
         for package in active_packages:
             user_id = package['user_id']
