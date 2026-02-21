@@ -238,7 +238,7 @@ async def check_milestone_bonuses(user_id: str):
             await db.notifications.insert_one({
                 'id': str(uuid.uuid4()),
                 'title': 'Milestone Bonus Unlocked!',
-                'message': f'Congratulations! You earned $50 bonus for reaching 20 active referrals!',
+                'message': 'Congratulations! You earned $50 bonus for reaching 20 active referrals!',
                 'user_id': user_id,
                 'is_read': False,
                 'read_by': [],
@@ -1068,7 +1068,7 @@ async def create_notification(data: NotificationCreate, payload: dict = Depends(
     await db.notifications.insert_one(notification_doc)
     
     if data.user_id:
-        return {'message': f'Notification sent to user successfully'}
+        return {'message': 'Notification sent to user successfully'}
     else:
         return {'message': 'Notification broadcast to all users successfully'}
 
@@ -1307,7 +1307,7 @@ async def approve_transaction(transaction_id: str, payload: dict = Depends(verif
                 await db.notifications.insert_one({
                     'id': str(uuid.uuid4()),
                     'title': 'Loan Unlocked!',
-                    'message': f'Congratulations! You unlocked $100 loan for 10 small packages purchased by your referrals. Remember to repay it!',
+                    'message': 'Congratulations! You unlocked $100 loan for 10 small packages purchased by your referrals. Remember to repay it!',
                     'user_id': transaction['user_id'],
                     'is_read': False,
                     'read_by': [],
@@ -1336,7 +1336,7 @@ async def approve_transaction(transaction_id: str, payload: dict = Depends(verif
                 await db.notifications.insert_one({
                     'id': str(uuid.uuid4()),
                     'title': 'Special Bonus Unlocked!',
-                    'message': f'Congratulations! You earned $500 bonus for 10 big packages purchased by your referrals!',
+                    'message': 'Congratulations! You earned $500 bonus for 10 big packages purchased by your referrals!',
                     'user_id': transaction['user_id'],
                     'is_read': False,
                     'read_by': [],
