@@ -67,7 +67,7 @@ export default function Dashboard() {
     }
 
     try {
-      const [userRes, packagesRes, tasksRes, refStatsRes, refTreeRes, bannerRes, binanceRes, minWithdrawalRes, withdrawalsRes, notificationsRes, unreadCountRes, refEarningsRes, claimStatusRes, bannersRes] = await Promise.all([
+      const [userRes, packagesRes, tasksRes, refStatsRes, refTreeRes, bannerRes, binanceRes, minWithdrawalRes, withdrawalsRes, notificationsRes, unreadCountRes, refEarningsRes, claimStatusRes, bannersRes, bonusRes] = await Promise.all([
         axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/packages/mine`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/tasks/daily`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -81,7 +81,8 @@ export default function Dashboard() {
         axios.get(`${API}/notifications/unread-count`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/referrals/earnings`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/tasks/claim-status`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API}/banner-ads/active`)
+        axios.get(`${API}/banner-ads/active`),
+        axios.get(`${API}/bonus-settings`)
       ]);
 
       setUser(userRes.data);
