@@ -567,29 +567,39 @@ export default function Dashboard() {
               </div>
 
               {/* Milestone Bonus */}
-              <div className="bg-black/40 border border-white/10 p-5">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  🎯 Milestone Bonus
-                  {referralEarnings.milestone.unlocked && <Badge className="bg-green-500 text-white">Unlocked!</Badge>}
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">Target:</span>
-                    <span className="text-white font-semibold">20 Active Referrals</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground text-sm">Progress:</span>
-                    <span className="text-white font-semibold">{referralEarnings.milestone.progress} / {referralEarnings.milestone.target}</span>
-                  </div>
-                  <Progress value={(referralEarnings.milestone.progress / referralEarnings.milestone.target) * 100} className="h-3" />
-                  <div className="border-t border-white/10 pt-2 mt-2">
+              {bonusSettings && bonusSettings.find(s => s.id === 'milestone_20_refs')?.enabled && (
+                <div className="bg-black/40 border border-white/10 p-5">
+                  <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    🎯 Milestone Bonus
+                    {referralEarnings.milestone.unlocked && <Badge className="bg-green-500 text-white">Unlocked!</Badge>}
+                  </h3>
+                  <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-white font-semibold">Earned:</span>
-                      <span className="text-gold font-bold text-lg">${referralEarnings.milestone.earned.toFixed(2)}</span>
+                      <span className="text-muted-foreground text-sm">Target:</span>
+                      <span className="text-white font-semibold">
+                        {bonusSettings.find(s => s.id === 'milestone_20_refs')?.target || 20} Active Referrals
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground text-sm">Reward:</span>
+                      <span className="text-green-500 font-bold">
+                        ${bonusSettings.find(s => s.id === 'milestone_20_refs')?.amount?.toFixed(2) || '50.00'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground text-sm">Progress:</span>
+                      <span className="text-white font-semibold">{referralEarnings.milestone.progress} / {referralEarnings.milestone.target}</span>
+                    </div>
+                    <Progress value={(referralEarnings.milestone.progress / referralEarnings.milestone.target) * 100} className="h-3" />
+                    <div className="border-t border-white/10 pt-2 mt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white font-semibold">Earned:</span>
+                        <span className="text-gold font-bold text-lg">${referralEarnings.milestone.earned.toFixed(2)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Loan & Special Bonuses */}
               <div className="bg-black/40 border border-white/10 p-5">
@@ -598,24 +608,34 @@ export default function Dashboard() {
                 </h3>
                 <div className="space-y-3">
                   {/* Small Package Loan */}
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-muted-foreground text-sm">$100 Loan (10 small pkgs by refs):</span>
-                      {referralEarnings.loans.small.unlocked && <Badge className="bg-blue-500 text-white">Unlocked</Badge>}
+                  {bonusSettings && bonusSettings.find(s => s.id === 'loan_small_packages')?.enabled && (
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-muted-foreground text-sm">
+                          ${bonusSettings.find(s => s.id === 'loan_small_packages')?.amount || 100} Loan 
+                          ({bonusSettings.find(s => s.id === 'loan_small_packages')?.target || 10} small pkgs by refs):
+                        </span>
+                        {referralEarnings.loans.small.unlocked && <Badge className="bg-blue-500 text-white">Unlocked</Badge>}
+                      </div>
+                      <Progress value={(referralEarnings.loans.small.progress / referralEarnings.loans.small.target) * 100} className="h-2 mb-1" />
+                      <p className="text-xs text-muted-foreground">{referralEarnings.loans.small.progress}/{referralEarnings.loans.small.target} packages</p>
                     </div>
-                    <Progress value={(referralEarnings.loans.small.progress / referralEarnings.loans.small.target) * 100} className="h-2 mb-1" />
-                    <p className="text-xs text-muted-foreground">{referralEarnings.loans.small.progress}/{referralEarnings.loans.small.target} packages</p>
-                  </div>
+                  )}
                   
                   {/* Big Package Bonus */}
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-muted-foreground text-sm">$500 Bonus (10 big pkgs by refs):</span>
-                      {referralEarnings.loans.big.unlocked && <Badge className="bg-green-500 text-white">Unlocked</Badge>}
+                  {bonusSettings && bonusSettings.find(s => s.id === 'bonus_big_packages')?.enabled && (
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-muted-foreground text-sm">
+                          ${bonusSettings.find(s => s.id === 'bonus_big_packages')?.amount || 500} Bonus 
+                          ({bonusSettings.find(s => s.id === 'bonus_big_packages')?.target || 10} big pkgs by refs):
+                        </span>
+                        {referralEarnings.loans.big.unlocked && <Badge className="bg-green-500 text-white">Unlocked</Badge>}
+                      </div>
+                      <Progress value={(referralEarnings.loans.big.progress / referralEarnings.loans.big.target) * 100} className="h-2 mb-1" />
+                      <p className="text-xs text-muted-foreground">{referralEarnings.loans.big.progress}/{referralEarnings.loans.big.target} packages</p>
                     </div>
-                    <Progress value={(referralEarnings.loans.big.progress / referralEarnings.loans.big.target) * 100} className="h-2 mb-1" />
-                    <p className="text-xs text-muted-foreground">{referralEarnings.loans.big.progress}/{referralEarnings.loans.big.target} packages</p>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
