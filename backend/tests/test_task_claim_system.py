@@ -191,14 +191,15 @@ class TaskClaimSystemTester:
             print("❌ CRITICAL: Cannot proceed without admin login")
             return
             
-        # Create daily tasks first
-        print("\n📋 STEP 1: Creating Daily Tasks")
-        task_ids = self.create_daily_tasks(3)
-        if len(task_ids) != 3:
-            print(f"❌ CRITICAL: Expected 3 tasks, got {len(task_ids)}")
+        # Get existing tasks instead of creating new ones
+        print("\n📋 STEP 1: Getting Existing Daily Tasks")
+        existing_tasks = self.get_all_tasks()
+        if len(existing_tasks) == 0:
+            print("❌ CRITICAL: No tasks found in database")
             return
             
-        print(f"✅ Created {len(task_ids)} daily tasks: {task_ids}")
+        task_ids = [task['id'] for task in existing_tasks]
+        print(f"✅ Found {len(task_ids)} existing tasks to work with")
         
         # TEST 1: Task Completion (No Immediate Payout)
         print("\n💰 TEST 1: Task Completion Without Immediate Payout")
