@@ -99,6 +99,7 @@ export default function Dashboard() {
       setReferralEarnings(refEarningsRes.data);
       setClaimStatus(claimStatusRes.data);
       setBannerAds(bannersRes.data.banners);
+      setBonusSettings(bonusRes.data.settings);
 
       if (userRes.data.kyc_status === 'under_review') {
         toast.info('Your KYC is under review. Some features are limited.');
