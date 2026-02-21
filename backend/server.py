@@ -1248,6 +1248,123 @@ async def get_admin_logs(payload: dict = Depends(verify_token)):
     
     return {'logs': logs}
 
+# Banner Ads Management
+@api_router.post('/admin/banner-ads/create')
+async def create_banner_ad(data: BannerAdCreate, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    banner_doc = {
+        'id': str(uuid.uuid4()),
+        'title': data.title,
+        'image_base64': data.image_base64,
+        'target_url': data.target_url,
+        'active': data.active,
+        'clicks': 0,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'updated_at': datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.banner_ads.insert_one(banner_doc)
+    
+    # Log the action
+    await db.admin_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'admin_id': payload['user_id'],
+        'admin_email': payload['email'],
+        'action': 'banner_ad_create',
+        'banner_id': banner_doc['id'],
+        'banner_title': data.title,
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {'message': 'Banner ad created successfully', 'banner_id': banner_doc['id']}
+
+@api_router.get('/banner-ads/active')
+async def get_active_banner_ads():
+    banners = await db.banner_ads.find(
+        {'active': True},
+        {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+    
+    return {'banners': banners}
+
+@api_router.get('/admin/banner-ads/all')
+async def get_all_banner_ads(payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    banners = await db.banner_ads.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    
+    return {'banners': banners}
+
+@api_router.put('/admin/banner-ads/{banner_id}')
+async def update_banner_ad(banner_id: str, data: BannerAdUpdate, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    banner = await db.banner_ads.find_one({'id': banner_id}, {'_id': 0})
+    if not banner:
+        raise HTTPException(status_code=404, detail='Banner not found')
+    
+    update_data = {'updated_at': datetime.now(timezone.utc).isoformat()}
+    if data.title is not None:
+        update_data['title'] = data.title
+    if data.target_url is not None:
+        update_data['target_url'] = data.target_url
+    if data.active is not None:
+        update_data['active'] = data.active
+    if data.image_base64 is not None:
+        update_data['image_base64'] = data.image_base64
+    
+    await db.banner_ads.update_one({'id': banner_id}, {'$set': update_data})
+    
+    # Log the action
+    await db.admin_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'admin_id': payload['user_id'],
+        'admin_email': payload['email'],
+        'action': 'banner_ad_update',
+        'banner_id': banner_id,
+        'banner_title': banner.get('title'),
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {'message': 'Banner ad updated successfully'}
+
+@api_router.delete('/admin/banner-ads/{banner_id}')
+async def delete_banner_ad(banner_id: str, payload: dict = Depends(verify_token)):
+    if payload['role'] != 'admin':
+        raise HTTPException(status_code=403, detail='Admin access required')
+    
+    banner = await db.banner_ads.find_one({'id': banner_id}, {'_id': 0})
+    if not banner:
+        raise HTTPException(status_code=404, detail='Banner not found')
+    
+    await db.banner_ads.delete_one({'id': banner_id})
+    
+    # Log the action
+    await db.admin_logs.insert_one({
+        'id': str(uuid.uuid4()),
+        'admin_id': payload['user_id'],
+        'admin_email': payload['email'],
+        'action': 'banner_ad_delete',
+        'banner_id': banner_id,
+        'banner_title': banner.get('title'),
+        'created_at': datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {'message': 'Banner ad deleted successfully'}
+
+@api_router.post('/banner-ads/{banner_id}/click')
+async def track_banner_click(banner_id: str):
+    # Track click for analytics
+    await db.banner_ads.update_one(
+        {'id': banner_id},
+        {'$inc': {'clicks': 1}}
+    )
+    return {'message': 'Click tracked'}
+
 @api_router.get('/admin/kyc/pending')
 async def get_pending_kyc(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
