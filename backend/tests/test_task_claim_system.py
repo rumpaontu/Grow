@@ -188,7 +188,8 @@ class TaskClaimSystemTester:
         response = self.session.get(f"{BACKEND_URL}/transactions/history", headers=headers)
         
         if response.status_code == 200:
-            return response.json()
+            data = response.json()
+            return data.get('transactions', [])
         return []
         
     def run_comprehensive_test(self):
