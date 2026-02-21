@@ -322,6 +322,17 @@ export default function Dashboard() {
     }
   };
 
+  const handleBannerClick = async (bannerId, targetUrl) => {
+    // Track click
+    try {
+      await axios.post(`${API}/banner-ads/${bannerId}/click`);
+    } catch (error) {
+      console.error('Failed to track banner click');
+    }
+    // Open link in new tab
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
+
 
 
   if (!user) {
