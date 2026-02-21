@@ -986,7 +986,7 @@ async def create_task(data: TaskCreate, payload: dict = Depends(verify_token)):
         'created_at': datetime.now(timezone.utc).isoformat()
     }
     
-    result = await db.tasks.insert_one(task_doc)
+    await db.tasks.insert_one(task_doc)
     
     return {'message': 'Task created successfully', 'task': {
         'id': task_doc['id'],
