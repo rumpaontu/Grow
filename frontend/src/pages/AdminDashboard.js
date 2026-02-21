@@ -87,6 +87,7 @@ export default function AdminDashboard() {
       setNotifications(notificationsRes.data.notifications);
       setAdminLogs(logsRes.data.logs);
       setBannerAds(bannersRes.data.banners);
+      setBonusSettings(bonusRes.data.settings);
     } catch (error) {
       toast.error('Failed to load admin data');
       if (error.response?.status === 401 || error.response?.status === 403) {
