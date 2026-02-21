@@ -65,7 +65,7 @@ class TaskClaimSystemTester:
         user_info = {
             'user_id': login_data['user']['id'],
             'email': email,
-            'token': login_data['access_token'],
+            'token': login_data['token'],
             'full_name': user_data['full_name']
         }
         
