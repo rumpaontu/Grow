@@ -1266,80 +1266,84 @@ async def approve_transaction(transaction_id: str, payload: dict = Depends(verif
     
     await check_milestone_bonuses(transaction['user_id'])
     
-    # Check loan eligibility based on REFERRAL packages, not user's own packages
-    referrer = await db.users.find_one({'id': transaction['user_id']}, {'_id': 0})
-    if referrer and referrer.get('referral_code'):
-        # Get all referrals
-        referral_users = await db.users.find(
-            {'referred_by': referrer['referral_code']},
-            {'_id': 0, 'id': 1}
-        ).to_list(None)
+    # Check loan eligibility - Award loans to the REFERRER based on this purchase
+    purchaser = await db.users.find_one({'id': transaction['user_id']}, {'_id': 0})
+    if purchaser and purchaser.get('referred_by'):
+        # Find the referrer (the person who referred this purchaser)
+        referrer = await db.users.find_one({'referral_code': purchaser['referred_by']}, {'_id': 0})
         
-        # Count packages purchased by referrals
-        small_ref_packages = 0
-        big_ref_packages = 0
-        for ref_user in referral_users:
-            ref_packages = await db.packages.find({'user_id': ref_user['id']}, {'_id': 0}).to_list(None)
-            small_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 25)
-            big_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 60)
-        
-        # Award $100 loan for 10 small packages by referrals
-        if small_ref_packages >= 10:
-            already_awarded = await db.transactions.find_one({
-                'user_id': transaction['user_id'],
-                'type': 'loan_bonus_10_small'
-            })
-            if not already_awarded:
-                await db.users.update_one(
-                    {'id': transaction['user_id']},
-                    {'$inc': {'balance': 100, 'loan_balance': 100}}
-                )
-                await db.transactions.insert_one({
-                    'id': str(uuid.uuid4()),
-                    'user_id': transaction['user_id'],
-                    'type': 'loan_bonus_10_small',
-                    'amount': 100,
-                    'status': 'completed',
-                    'created_at': datetime.now(timezone.utc).isoformat()
+        if referrer:
+            # Get all of the referrer's referrals
+            referrer_referrals = await db.users.find(
+                {'referred_by': referrer['referral_code']},
+                {'_id': 0, 'id': 1}
+            ).to_list(None)
+            
+            # Count packages purchased by the referrer's referrals
+            small_ref_packages = 0
+            big_ref_packages = 0
+            for ref_user in referrer_referrals:
+                ref_packages = await db.packages.find({'user_id': ref_user['id']}, {'_id': 0}).to_list(None)
+                small_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 25)
+                big_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 60)
+            
+            # Award $100 loan for 10 small packages by referrals
+            if small_ref_packages >= 10:
+                already_awarded = await db.transactions.find_one({
+                    'user_id': referrer['id'],
+                    'type': 'loan_bonus_10_small'
                 })
-                await db.notifications.insert_one({
-                    'id': str(uuid.uuid4()),
-                    'title': 'Loan Unlocked!',
-                    'message': 'Congratulations! You unlocked $100 loan for 10 small packages purchased by your referrals. Remember to repay it!',
-                    'user_id': transaction['user_id'],
-                    'is_read': False,
-                    'read_by': [],
-                    'created_at': datetime.now(timezone.utc).isoformat()
+                if not already_awarded:
+                    await db.users.update_one(
+                        {'id': referrer['id']},
+                        {'$inc': {'balance': 100, 'loan_balance': 100}}
+                    )
+                    await db.transactions.insert_one({
+                        'id': str(uuid.uuid4()),
+                        'user_id': referrer['id'],
+                        'type': 'loan_bonus_10_small',
+                        'amount': 100,
+                        'status': 'completed',
+                        'created_at': datetime.now(timezone.utc).isoformat()
+                    })
+                    await db.notifications.insert_one({
+                        'id': str(uuid.uuid4()),
+                        'title': 'Loan Unlocked!',
+                        'message': 'Congratulations! You unlocked $100 loan for 10 small packages purchased by your referrals. Remember to repay it!',
+                        'user_id': referrer['id'],
+                        'is_read': False,
+                        'read_by': [],
+                        'created_at': datetime.now(timezone.utc).isoformat()
+                    })
+            
+            # Award $500 bonus for 10 big packages by referrals
+            if big_ref_packages >= 10:
+                already_awarded = await db.transactions.find_one({
+                    'user_id': referrer['id'],
+                    'type': 'loan_bonus_10_big'
                 })
-        
-        # Award $500 bonus for 10 big packages by referrals
-        if big_ref_packages >= 10:
-            already_awarded = await db.transactions.find_one({
-                'user_id': transaction['user_id'],
-                'type': 'loan_bonus_10_big'
-            })
-            if not already_awarded:
-                await db.users.update_one(
-                    {'id': transaction['user_id']},
-                    {'$inc': {'balance': 500}}
-                )
-                await db.transactions.insert_one({
-                    'id': str(uuid.uuid4()),
-                    'user_id': transaction['user_id'],
-                    'type': 'loan_bonus_10_big',
-                    'amount': 500,
-                    'status': 'completed',
-                    'created_at': datetime.now(timezone.utc).isoformat()
-                })
-                await db.notifications.insert_one({
-                    'id': str(uuid.uuid4()),
-                    'title': 'Special Bonus Unlocked!',
-                    'message': 'Congratulations! You earned $500 bonus for 10 big packages purchased by your referrals!',
-                    'user_id': transaction['user_id'],
-                    'is_read': False,
-                    'read_by': [],
-                    'created_at': datetime.now(timezone.utc).isoformat()
-                })
+                if not already_awarded:
+                    await db.users.update_one(
+                        {'id': referrer['id']},
+                        {'$inc': {'balance': 500}}
+                    )
+                    await db.transactions.insert_one({
+                        'id': str(uuid.uuid4()),
+                        'user_id': referrer['id'],
+                        'type': 'loan_bonus_10_big',
+                        'amount': 500,
+                        'status': 'completed',
+                        'created_at': datetime.now(timezone.utc).isoformat()
+                    })
+                    await db.notifications.insert_one({
+                        'id': str(uuid.uuid4()),
+                        'title': 'Special Bonus Unlocked!',
+                        'message': 'Congratulations! You earned $500 bonus for 10 big packages purchased by your referrals!',
+                        'user_id': referrer['id'],
+                        'is_read': False,
+                        'read_by': [],
+                        'created_at': datetime.now(timezone.utc).isoformat()
+                    })
     
     await db.notifications.insert_one({
         'id': str(uuid.uuid4()),
