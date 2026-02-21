@@ -193,15 +193,18 @@ backend:
 
   - task: "Loan repayment endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "New endpoint /api/referrals/repay-loan allows users to repay outstanding loans. Deducts from both balance and loan_balance. Creates loan_repayment transaction record. Sends notification with remaining loan balance."
+      - working: true
+        agent: "testing"
+        comment: "✅ Verified: Loan repayment endpoint works correctly. Proper validation for loan balance, sufficient funds, positive amounts. Deducts from both balance and loan_balance. Creates transaction records and notifications. API responses are correct."
 
   - task: "Referral earnings API endpoint"
     implemented: true
