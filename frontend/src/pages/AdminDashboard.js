@@ -414,6 +414,29 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleUpdateBonusSetting = async () => {
+    if (!editingBonusSetting) return;
+
+    const token = localStorage.getItem('token');
+    try {
+      await axios.put(
+        `${API}/admin/bonus-settings/${editingBonusSetting.id}`,
+        {
+          target: editingBonusSetting.target,
+          amount: editingBonusSetting.amount,
+          enabled: editingBonusSetting.enabled
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Bonus setting updated successfully');
+      setShowBonusEditDialog(false);
+      setEditingBonusSetting(null);
+      fetchAdminData();
+    } catch (error) {
+      toast.error('Failed to update bonus setting');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-dark-obsidian">
       {/* Header */}
