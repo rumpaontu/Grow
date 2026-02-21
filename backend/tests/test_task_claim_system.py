@@ -336,9 +336,12 @@ class TaskClaimSystemTester:
             if tx1: self.approve_package(tx1)
             if tx2: self.approve_package(tx2)
             
-            # Complete all tasks
-            for task_id in task_ids:
+            # Complete all tasks for multi-user too
+            print(f"📋 Completing all {len(task_ids)} tasks...")
+            for i, task_id in enumerate(task_ids):
                 self.complete_task(multi_user['token'], task_id)
+                if (i + 1) % 10 == 0:  # Progress update every 10 tasks
+                    print(f"📋 Completed {i + 1}/{len(task_ids)} tasks...")
                 
             # Claim daily income
             multi_claim_response = self.claim_daily_income(multi_user['token'])
