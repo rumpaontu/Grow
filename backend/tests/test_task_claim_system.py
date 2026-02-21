@@ -31,7 +31,7 @@ class TaskClaimSystemTester:
             return False
             
         data = response.json()
-        self.admin_token = data['access_token']
+        self.admin_token = data['token']
         print("✅ Admin login successful")
         return True
         
