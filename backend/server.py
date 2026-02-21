@@ -1613,7 +1613,8 @@ async def withdrawal_action(data: WithdrawalAction, payload: dict = Depends(veri
             {'id': data.withdrawal_id},
             {'$set': {
                 'status': 'approved',
-                'processed_at': datetime.now(timezone.utc).isoformat()
+                'processed_at': datetime.now(timezone.utc).isoformat(),
+                'updated_at': datetime.now(timezone.utc).isoformat()
             }}
         )
         
