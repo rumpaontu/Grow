@@ -1841,6 +1841,44 @@ scheduler.add_job(process_daily_income, 'cron', hour=0, minute=5)
 
 @app.on_event("startup")
 async def startup_event():
+    # Initialize default bonus settings
+    existing_settings = await db.bonus_settings.find_one({})
+    if not existing_settings:
+        default_settings = [
+            {
+                'id': 'milestone_20_refs',
+                'type': 'milestone',
+                'name': 'Milestone Bonus - 20 Active Referrals',
+                'target': 20,
+                'amount': 50,
+                'enabled': True,
+                'created_at': datetime.now(timezone.utc).isoformat(),
+                'updated_at': datetime.now(timezone.utc).isoformat()
+            },
+            {
+                'id': 'loan_small_packages',
+                'type': 'loan',
+                'name': 'Loan - Small Packages by Referrals',
+                'target': 10,
+                'amount': 100,
+                'enabled': True,
+                'created_at': datetime.now(timezone.utc).isoformat(),
+                'updated_at': datetime.now(timezone.utc).isoformat()
+            },
+            {
+                'id': 'bonus_big_packages',
+                'type': 'bonus',
+                'name': 'Special Bonus - Big Packages by Referrals',
+                'target': 10,
+                'amount': 500,
+                'enabled': True,
+                'created_at': datetime.now(timezone.utc).isoformat(),
+                'updated_at': datetime.now(timezone.utc).isoformat()
+            }
+        ]
+        await db.bonus_settings.insert_many(default_settings)
+        logger.info('Default bonus settings initialized')
+    
     scheduler.start()
     logger.info('Scheduler started')
 
