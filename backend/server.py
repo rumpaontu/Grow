@@ -512,7 +512,7 @@ async def get_daily_tasks(payload: dict = Depends(verify_token)):
     completed_tasks = await db.task_completions.find({
         'user_id': payload['user_id'],
         'date': today
-    }, {'_id': 0}).to_list(None)
+    }, {'_id': 0}).to_list(1000)
     
     completed_task_ids = [tc['task_id'] for tc in completed_tasks]
     
@@ -578,7 +578,7 @@ async def claim_daily_income(payload: dict = Depends(verify_token)):
         raise HTTPException(status_code=400, detail='Daily income already claimed today')
     
     # Get all tasks
-    all_tasks = await db.tasks.find({}, {'_id': 0, 'id': 1}).to_list(None)
+    all_tasks = await db.tasks.find({}, {'_id': 0, 'id': 1}).to_list(1000)
     
     if not all_tasks:
         raise HTTPException(status_code=400, detail='No tasks available')
@@ -587,7 +587,7 @@ async def claim_daily_income(payload: dict = Depends(verify_token)):
     completed_tasks = await db.task_completions.find({
         'user_id': payload['user_id'],
         'date': today
-    }, {'_id': 0}).to_list(None)
+    }, {'_id': 0}).to_list(1000)
     
     completed_task_ids = [tc['task_id'] for tc in completed_tasks]
     all_task_ids = [t['id'] for t in all_tasks]
@@ -600,7 +600,7 @@ async def claim_daily_income(payload: dict = Depends(verify_token)):
         'user_id': payload['user_id'],
         'is_active': True,
         'days_remaining': {'$gt': 0}
-    }).to_list(None)
+    }).to_list(1000)
     
     if not active_packages:
         raise HTTPException(status_code=400, detail='No active packages found')
@@ -681,7 +681,7 @@ async def get_claim_status(payload: dict = Depends(verify_token)):
     })
     
     # Get all tasks
-    all_tasks = await db.tasks.find({}, {'_id': 0, 'id': 1, 'title': 1}).to_list(None)
+    all_tasks = await db.tasks.find({}, {'_id': 0, 'id': 1, 'title': 1}).to_list(1000)
     
     if not all_tasks:
         return {
@@ -697,7 +697,7 @@ async def get_claim_status(payload: dict = Depends(verify_token)):
     completed_tasks = await db.task_completions.find({
         'user_id': payload['user_id'],
         'date': today
-    }, {'_id': 0}).to_list(None)
+    }, {'_id': 0}).to_list(1000)
     
     completed_task_ids = [tc['task_id'] for tc in completed_tasks]
     all_task_ids = [t['id'] for t in all_tasks]
@@ -711,7 +711,7 @@ async def get_claim_status(payload: dict = Depends(verify_token)):
         'user_id': payload['user_id'],
         'is_active': True,
         'days_remaining': {'$gt': 0}
-    }).to_list(None)
+    }).to_list(1000)
     
     can_claim = (
         all_tasks_completed and 
@@ -738,14 +738,14 @@ async def get_referral_tree(payload: dict = Depends(verify_token)):
     level1_refs = await db.users.find(
         {'referred_by': user.get('referral_code')},
         {'_id': 0, 'id': 1, 'full_name': 1, 'email': 1, 'balance': 1, 'created_at': 1, 'referral_code': 1}
-    ).to_list(None)
+    ).to_list(1000)
     
     level2_refs = []
     for l1_ref in level1_refs:
         l2_refs = await db.users.find(
             {'referred_by': l1_ref.get('referral_code')},
             {'_id': 0, 'id': 1, 'full_name': 1, 'email': 1, 'balance': 1, 'created_at': 1}
-        ).to_list(None)
+        ).to_list(1000)
         level2_refs.extend(l2_refs)
     
     return {
@@ -782,7 +782,7 @@ async def get_referral_earnings(payload: dict = Depends(verify_token)):
     transactions = await db.transactions.find({
         'user_id': payload['user_id'],
         'type': {'$in': ['referral_bonus_l1', 'referral_bonus_l2', 'daily_referral_bonus_l1', 'daily_referral_bonus_l2', 'milestone_bonus_20_refs', 'loan_bonus_10_small', 'loan_bonus_10_big']}
-    }, {'_id': 0}).to_list(None)
+    }, {'_id': 0}).to_list(1000)
     
     # Calculate totals
     instant_l1 = sum(t['amount'] for t in transactions if t['type'] == 'referral_bonus_l1')
@@ -808,12 +808,12 @@ async def get_referral_earnings(payload: dict = Depends(verify_token)):
     referral_users = await db.users.find(
         {'referred_by': user.get('referral_code')},
         {'_id': 0, 'id': 1}
-    ).to_list(None)
+    ).to_list(1000)
     
     small_ref_packages = 0
     big_ref_packages = 0
     for ref_user in referral_users:
-        ref_packages = await db.packages.find({'user_id': ref_user['id']}, {'_id': 0}).to_list(None)
+        ref_packages = await db.packages.find({'user_id': ref_user['id']}, {'_id': 0}).to_list(1000)
         small_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 25)
         big_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 60)
     
@@ -985,7 +985,7 @@ async def request_withdrawal(data: WithdrawalRequest, payload: dict = Depends(ve
     pending_withdrawals = await db.withdrawals.find({
         'user_id': payload['user_id'],
         'status': 'pending'
-    }).to_list(None)
+    }).to_list(1000)
     
     if pending_withdrawals:
         raise HTTPException(status_code=400, detail='You have a pending withdrawal request. Please wait for approval.')
@@ -1011,7 +1011,7 @@ async def get_my_withdrawals(payload: dict = Depends(verify_token)):
     withdrawals = await db.withdrawals.find(
         {'user_id': payload['user_id']},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(None)
+    ).sort('created_at', -1).to_list(1000)
     return {'withdrawals': withdrawals}
 
 @api_router.get('/notifications/mine')
@@ -1025,7 +1025,7 @@ async def get_my_notifications(payload: dict = Depends(verify_token)):
             {'user_id': None}
         ]},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(None)
+    ).sort('created_at', -1).to_list(1000)
     
     # Add is_unread field for each notification
     for notif in notifications:
@@ -1045,7 +1045,7 @@ async def get_unread_count(payload: dict = Depends(verify_token)):
             {'user_id': payload['user_id']},
             {'user_id': None}
         ]
-    }, {'_id': 0}).to_list(None)
+    }, {'_id': 0}).to_list(1000)
     
     # Count only those where user hasn't read yet
     unread_count = 0
@@ -1244,7 +1244,7 @@ async def get_admin_logs(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
         raise HTTPException(status_code=403, detail='Admin access required')
     
-    logs = await db.admin_logs.find({}, {'_id': 0}).sort('created_at', -1).limit(100).to_list(None)
+    logs = await db.admin_logs.find({}, {'_id': 0}).sort('created_at', -1).limit(100).to_list(1000)
     
     return {'logs': logs}
 
@@ -1285,7 +1285,7 @@ async def get_active_banner_ads():
     banners = await db.banner_ads.find(
         {'active': True},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(None)
+    ).sort('created_at', -1).to_list(1000)
     
     return {'banners': banners}
 
@@ -1294,7 +1294,7 @@ async def get_all_banner_ads(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
         raise HTTPException(status_code=403, detail='Admin access required')
     
-    banners = await db.banner_ads.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    banners = await db.banner_ads.find({}, {'_id': 0}).sort('created_at', -1).to_list(1000)
     
     return {'banners': banners}
 
@@ -1373,7 +1373,7 @@ async def get_pending_kyc(payload: dict = Depends(verify_token)):
     users = await db.users.find(
         {'kyc_status': 'under_review'},
         {'_id': 0, 'password': 0}
-    ).to_list(None)
+    ).to_list(1000)
     
     return {'users': users}
 
@@ -1504,7 +1504,7 @@ async def get_all_notifications(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
         raise HTTPException(status_code=403, detail='Admin access required')
     
-    notifications = await db.notifications.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    notifications = await db.notifications.find({}, {'_id': 0}).sort('created_at', -1).to_list(1000)
     
     for notif in notifications:
         if notif.get('user_id'):
@@ -1535,7 +1535,7 @@ async def get_pending_withdrawals(payload: dict = Depends(verify_token)):
     withdrawals = await db.withdrawals.find(
         {'status': 'pending'},
         {'_id': 0}
-    ).sort('created_at', -1).to_list(None)
+    ).sort('created_at', -1).to_list(1000)
     
     for withdrawal in withdrawals:
         user = await db.users.find_one({'id': withdrawal['user_id']}, {'_id': 0})
@@ -1550,7 +1550,7 @@ async def get_all_withdrawals(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
         raise HTTPException(status_code=403, detail='Admin access required')
     
-    withdrawals = await db.withdrawals.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    withdrawals = await db.withdrawals.find({}, {'_id': 0}).sort('created_at', -1).to_list(1000)
     
     for withdrawal in withdrawals:
         user = await db.users.find_one({'id': withdrawal['user_id']}, {'_id': 0})
@@ -1643,7 +1643,7 @@ async def get_sponsor_inquiries(payload: dict = Depends(verify_token)):
     if payload['role'] != 'admin':
         raise HTTPException(status_code=403, detail='Admin access required')
     
-    inquiries = await db.sponsor_inquiries.find({}, {'_id': 0}).sort('created_at', -1).to_list(None)
+    inquiries = await db.sponsor_inquiries.find({}, {'_id': 0}).sort('created_at', -1).to_list(1000)
     return {'inquiries': inquiries}
 
 @api_router.get('/admin/transactions/pending')
@@ -1654,7 +1654,7 @@ async def get_pending_transactions(payload: dict = Depends(verify_token)):
     transactions = await db.transactions.find(
         {'type': 'package_purchase', 'status': 'pending'},
         {'_id': 0}
-    ).to_list(None)
+    ).to_list(1000)
     
     return {'transactions': transactions}
 
@@ -1706,13 +1706,13 @@ async def approve_transaction(transaction_id: str, payload: dict = Depends(verif
             referrer_referrals = await db.users.find(
                 {'referred_by': referrer['referral_code']},
                 {'_id': 0, 'id': 1}
-            ).to_list(None)
+            ).to_list(1000)
             
             # Count packages purchased by the referrer's referrals
             small_ref_packages = 0
             big_ref_packages = 0
             for ref_user in referrer_referrals:
-                ref_packages = await db.packages.find({'user_id': ref_user['id']}, {'_id': 0}).to_list(None)
+                ref_packages = await db.packages.find({'user_id': ref_user['id']}, {'_id': 0}).to_list(1000)
                 small_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 25)
                 big_ref_packages += sum(1 for p in ref_packages if p.get('amount') == 60)
             
