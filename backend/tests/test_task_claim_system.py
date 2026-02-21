@@ -224,19 +224,16 @@ class TaskClaimSystemTester:
         balance_after_purchase = self.get_user_balance(user['token'])
         print(f"💰 Balance after $25 package: ${balance_after_purchase}")
         
-        # Complete Task 1 and 2
-        print("\n📋 Completing Task 1...")
-        self.complete_task(user['token'], task_ids[0])
-        balance_after_task1 = self.get_user_balance(user['token'])
-        print(f"💰 Balance after Task 1: ${balance_after_task1}")
-        
-        print("\n📋 Completing Task 2...")
-        self.complete_task(user['token'], task_ids[1])
-        balance_after_task2 = self.get_user_balance(user['token'])
-        print(f"💰 Balance after Task 2: ${balance_after_task2}")
+        # Complete ALL tasks gradually for testing
+        print(f"\n📋 Completing first {min(5, len(task_ids))} tasks to test partial completion...")
+        for i in range(min(5, len(task_ids))):
+            self.complete_task(user['token'], task_ids[i])
+            
+        balance_after_partial = self.get_user_balance(user['token'])
+        print(f"💰 Balance after {min(5, len(task_ids))} tasks: ${balance_after_partial}")
         
         # Verify no money was added for individual tasks
-        if balance_after_task1 == balance_after_task2 == balance_after_purchase:
+        if balance_after_partial == balance_after_purchase:
             print("✅ TEST 1 PASSED: No money added for individual task completions")
         else:
             print("❌ TEST 1 FAILED: Money was added for individual tasks")
