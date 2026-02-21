@@ -221,7 +221,7 @@ class ReferralSystemTester:
         print(f"\n🎯 {user.name} completing daily task...")
         
         # First get available tasks
-        tasks_response = self.make_request('GET', '/tasks', token=user.token)
+        tasks_response = self.make_request('GET', '/tasks/daily', token=user.token)
         if not tasks_response['success'] or not tasks_response['data'].get('tasks'):
             self.log_result(f"Complete Task {user.name}", False, "No tasks available", tasks_response['data'])
             return False
