@@ -254,7 +254,8 @@ async def daily_task_reset():
     try:
         today = datetime.now(timezone.utc).date().isoformat()
         await db.task_completions.delete_many({'date': {'$ne': today}})
-        logger.info('Daily tasks reset completed')
+        await db.daily_income_claims.delete_many({'date': {'$ne': today}})
+        logger.info('Daily tasks and income claims reset completed')
     except Exception as e:
         logger.error(f'Error in daily task reset: {e}')
 
