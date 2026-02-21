@@ -202,6 +202,7 @@ const WithdrawalNotification = ({ isLoggedIn }) => {
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   );
 };
 
