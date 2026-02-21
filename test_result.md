@@ -151,15 +151,18 @@ backend:
 
   - task: "Loan system - $100 for 10 small packages by referrals"
     implemented: true
-    working: "NA"
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Fixed loan logic to count packages purchased by REFERRALS (not user's own packages). Awards $100 loan after 10 small ($25) packages purchased by referrals. Adds to both balance and loan_balance fields. Includes notification."
+      - working: false
+        agent: "testing"
+        comment: "CRITICAL BUG: Loan logic is backwards! Lines 1269-1343 check if transaction user has referrals, but should check if transaction user WAS REFERRED and award loan to the REFERRER. Current: B buys package → check if B has referrals → award loan to B. Correct: B buys package → find A who referred B → check if A's referrals have 10 packages → award loan to A. Tested with 10 referral packages, no loan awarded."
 
   - task: "Special bonus - $500 for 10 big packages by referrals"
     implemented: true
