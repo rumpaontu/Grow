@@ -1266,6 +1266,122 @@ export default function AdminDashboard() {
             </div>
           </TabsContent>
 
+          {/* Manage Bonuses Tab */}
+          <TabsContent value="bonuses" className="glass-effect p-6">
+            <h2 className="text-2xl font-bold text-gold mb-6 font-montserrat">Manage Milestones & Bonuses</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {bonusSettings.map((setting) => (
+                <div key={setting.id} className="bg-black/40 border border-white/10 p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white mb-2">{setting.name}</h3>
+                      <div className="space-y-2 text-sm">
+                        <p className="text-muted-foreground">
+                          Target: <span className="text-gold font-bold">{setting.target}</span> {setting.type === 'milestone' ? 'active referrals' : 'packages'}
+                        </p>
+                        <p className="text-muted-foreground">
+                          Reward: <span className="text-green-500 font-bold">${setting.amount}</span>
+                        </p>
+                        <div className="flex items-center gap-2 mt-3">
+                          <span className="text-muted-foreground">Status:</span>
+                          {setting.enabled ? (
+                            <Badge className="bg-green-500 text-white">Enabled</Badge>
+                          ) : (
+                            <Badge className="bg-gray-500 text-white">Disabled</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Dialog open={showBonusEditDialog && editingBonusSetting?.id === setting.id} onOpenChange={(open) => {
+                    setShowBonusEditDialog(open);
+                    if (!open) setEditingBonusSetting(null);
+                  }}>
+                    <DialogTrigger asChild>
+                      <Button
+                        onClick={() => {
+                          setEditingBonusSetting(setting);
+                          setShowBonusEditDialog(true);
+                        }}
+                        className="w-full bg-gold text-black hover:bg-accent mt-4"
+                      >
+                        Edit Settings
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-[#1A1A1A] border-white/10">
+                      <DialogHeader>
+                        <DialogTitle className="text-gold font-montserrat text-2xl">Edit {setting.name}</DialogTitle>
+                      </DialogHeader>
+                      {editingBonusSetting && editingBonusSetting.id === setting.id && (
+                        <div className="space-y-4 mt-4">
+                          <div>
+                            <Label htmlFor="bonus_target" className="text-white">
+                              Target {setting.type === 'milestone' ? 'Referrals' : 'Packages'}
+                            </Label>
+                            <Input
+                              id="bonus_target"
+                              type="number"
+                              min="1"
+                              value={editingBonusSetting.target}
+                              onChange={(e) => setEditingBonusSetting({ ...editingBonusSetting, target: parseInt(e.target.value) })}
+                              className="bg-black/50 border-white/10 text-white mt-2"
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="bonus_amount" className="text-white">Reward Amount ($)</Label>
+                            <Input
+                              id="bonus_amount"
+                              type="number"
+                              min="1"
+                              step="0.01"
+                              value={editingBonusSetting.amount}
+                              onChange={(e) => setEditingBonusSetting({ ...editingBonusSetting, amount: parseFloat(e.target.value) })}
+                              className="bg-black/50 border-white/10 text-white mt-2"
+                            />
+                          </div>
+                          
+                          <div className="flex items-center gap-3 p-4 bg-gold/5 border border-gold/20 rounded-lg">
+                            <input
+                              type="checkbox"
+                              id="bonus_enabled"
+                              checked={editingBonusSetting.enabled}
+                              onChange={(e) => setEditingBonusSetting({ ...editingBonusSetting, enabled: e.target.checked })}
+                              className="w-5 h-5 accent-gold cursor-pointer"
+                            />
+                            <label htmlFor="bonus_enabled" className="text-white cursor-pointer">
+                              Enable this bonus
+                            </label>
+                          </div>
+                          
+                          <div className="bg-blue-900/20 border border-blue-500/40 p-3 text-sm text-blue-200">
+                            <p>⚠️ Changes will take effect immediately for all users</p>
+                          </div>
+                          
+                          <Button
+                            onClick={handleUpdateBonusSetting}
+                            className="w-full bg-gold text-black hover:bg-accent font-semibold py-6"
+                          >
+                            Save Changes
+                          </Button>
+                        </div>
+                      )}
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              ))}
+            </div>
+            
+            {bonusSettings.length === 0 && (
+              <div className="text-center py-12">
+                <Award className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No bonus settings found</p>
+              </div>
+            )}
+          </TabsContent>
+
         </Tabs>
       </div>
 
