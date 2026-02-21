@@ -100,8 +100,8 @@ class TaskClaimSystemTester:
         """Approve package purchase (admin action)"""
         print(f"✅ Approving package transaction {transaction_id}")
         headers = {'Authorization': f'Bearer {self.admin_token}'}
-        response = self.session.post(f"{BACKEND_URL}/admin/transaction/approve", 
-                                   json={"transaction_id": transaction_id}, headers=headers)
+        response = self.session.post(f"{BACKEND_URL}/admin/transactions/{transaction_id}/approve", 
+                                   headers=headers)
         
         if response.status_code != 200:
             print(f"❌ Package approval failed: {response.status_code} - {response.text}")
