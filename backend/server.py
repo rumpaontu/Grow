@@ -256,6 +256,28 @@ async def get_user_referral_code(user_id: str):
     user = await db.users.find_one({'id': user_id}, {'_id': 0})
     return user.get('referral_code') if user else None
 
+async def is_user_banned(user_id: str):
+    user = await db.users.find_one({'id': user_id}, {'_id': 0})
+    if not user:
+        return False
+    
+    if not user.get('banned') or not user.get('banned_until'):
+        return False
+    
+    # Check if ban has expired
+    banned_until = datetime.fromisoformat(user['banned_until'])
+    now = datetime.now(timezone.utc)
+    
+    if now >= banned_until:
+        # Ban expired, update user
+        await db.users.update_one(
+            {'id': user_id},
+            {'$set': {'banned': False, 'banned_until': None}}
+        )
+        return False
+    
+    return True
+
 async def daily_task_reset():
     logger.info('Running daily task reset')
     try:
