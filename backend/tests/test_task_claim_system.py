@@ -45,7 +45,7 @@ class TaskClaimSystemTester:
         }
         
         print(f"👤 Creating test user: {email}")
-        response = self.session.post(f"{BACKEND_URL}/auth/register", json=user_data)
+        response = self.session.post(f"{BACKEND_URL}/auth/signup", json=user_data)
         
         if response.status_code != 201:
             print(f"❌ User creation failed: {response.status_code} - {response.text}")
