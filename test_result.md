@@ -118,15 +118,18 @@ backend:
 
   - task: "Instant bonuses on package purchase (5% L1, 2% L2)"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "calculate_referral_bonuses() function handles instant bonuses. Called in admin package approval endpoint at line 1170. Awards 5% to Level 1 referrer and 2% to Level 2 referrer on package purchase."
+      - working: true
+        agent: "testing"
+        comment: "✅ Verified: Instant bonuses work perfectly. L1 bonus: $25 * 5% = $1.25 ✓, L2 bonus: $25 * 2% = $0.50 ✓. Both levels receive bonuses immediately after admin approves package purchase."
 
   - task: "Daily recurring bonuses from task earnings (5% L1, 2% L2)"
     implemented: true
