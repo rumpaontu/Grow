@@ -314,7 +314,7 @@ metadata:
 
 test_plan:
   current_focus:
-    []
+    - "Daily task and income claim system - Fixed logic"
   stuck_tasks:
     []
   test_all: false
