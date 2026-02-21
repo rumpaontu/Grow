@@ -318,6 +318,17 @@ export default function AdminDashboard() {
       toast.error('Failed to unban user');
     }
   };
+
+  const handleCreateNotification = async () => {
+    if (!newNotification.title || !newNotification.message) {
+      toast.error('Please provide title and message');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(
+        `${API}/admin/notifications/create`,
         {
           title: newNotification.title,
           message: newNotification.message,
